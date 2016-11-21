@@ -15,20 +15,24 @@
  ~ KIND, either express or implied.  See the License for the
  ~ specific language governing permissions and limitations
  ~ under the License.
-	 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+-->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.wso2</groupId>
         <artifactId>wso2</artifactId>
         <version>1</version>
     </parent>
-    <groupId>org.wso2.extension.siddhi.function</groupId>
-    <artifactId>org.wso2.extension.siddhi.function</artifactId>
+
+    <groupId>org.wso2.extension.siddhi.execution</groupId>
+    <artifactId>siddhi-execution-reorder</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>WSO2 Carbon Extension - Siddhi Reorder Pom</name>
+    <name>WSO2 Siddhi Extension - Reorder Extension Aggregator Pom</name>
     <url>http://wso2.org</url>
+
     <profiles>
         <profile>
             <id>default</id>
@@ -41,11 +45,13 @@
             </modules>
         </profile>
     </profiles>
+
     <properties>
-        <version.org.wso2.siddhi>3.1.0-alpha</version.org.wso2.siddhi>
-        <version.org.apache.log4j.wso2>1.2.17.wso2v1</version.org.apache.log4j.wso2>
-        <version.junit>4.10</version.junit>
+        <siddhi.version>3.1.2</siddhi.version>
+        <log4j.version>1.2.17.wso2v1</log4j.version>
+        <junit.version>4.10</junit.version>
     </properties>
+
     <scm>
         <connection>scm:git:https://github.com/wso2-extensions/siddhi-execution-reorder.git</connection>
         <url>https://github.com/wso2-extensions/siddhi-execution-reorder.git</url>
@@ -53,6 +59,51 @@
         </developerConnection>
         <tag>HEAD</tag>
     </scm>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.wso2.siddhi</groupId>
+                <artifactId>siddhi-core</artifactId>
+                <version>${siddhi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.siddhi</groupId>
+                <artifactId>siddhi-query-api</artifactId>
+                <version>${siddhi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.log4j.wso2</groupId>
+                <artifactId>log4j</artifactId>
+                <version>${log4j.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.mail</groupId>
+                        <artifactId>mail</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.jms</groupId>
+                        <artifactId>jms</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jdmk</groupId>
+                        <artifactId>jmxtools</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jmx</groupId>
+                        <artifactId>jmxri</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
         <extensions>
             <extension>
@@ -61,6 +112,7 @@
                 <version>2.1</version>
             </extension>
         </extensions>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -148,6 +200,7 @@
             </plugins>
         </pluginManagement>
     </build>
+
     <pluginRepositories>
         <pluginRepository>
             <id>wso2.releases</id>
@@ -182,6 +235,7 @@
             </releases>
         </pluginRepository>
     </pluginRepositories>
+
     <repositories>
         <repository>
             <id>wso2-nexus</id>
@@ -216,6 +270,7 @@
             </releases>
         </repository>
     </repositories>
+
     <distributionManagement>
         <repository>
             <id>nexus-releases</id>

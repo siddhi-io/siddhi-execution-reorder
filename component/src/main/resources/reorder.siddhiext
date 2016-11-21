@@ -16,4 +16,4 @@
 # under the License.
 #
 
-kslack=org.wso2.siddhi.extension.reorder.KSlackExtension
+kslack=org.wso2.extension.siddhi.execution.reorder.KSlackExtension
