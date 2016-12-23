@@ -283,7 +283,6 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
 
         }
         if (attributeExpressionExecutors.length >= 3) {
-            flag = true;
             if (attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[2].getReturnType() == Attribute.Type.LONG) {
                     attributes.add(new Attribute("beta2", Attribute.Type.LONG));
@@ -301,6 +300,7 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
 
         }
         if (attributeExpressionExecutors.length >= 4) {
+            flag = true;
             if(attributeExpressionExecutors[3] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[3].getReturnType() == Attribute.Type.LONG) {
                     timerDuration = (Long) ((ConstantExpressionExecutor)
