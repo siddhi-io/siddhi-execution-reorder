@@ -52,9 +52,9 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
     private TreeMap<Long, ArrayList<StreamEvent>> expiredEventTreeMap;
     private ExpressionExecutor timestampExecutor;
     private long MAX_K = Long.MAX_VALUE;
-    private long TIMER_DURATION = -1l;
+    private long TIMER_DURATION = -1L;
     private boolean expireFlag = false;
-    private long lastSentTimeStamp = -1l;
+    private long lastSentTimeStamp = -1L;
     private Scheduler scheduler;
     private long lastScheduledTimestamp = -1;
     private ReentrantLock lock = new ReentrantLock();
@@ -88,7 +88,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             while (streamEventChunk.hasNext()) {
                 StreamEvent event = streamEventChunk.next();
 
-                if(event.getType() != ComplexEvent.Type.TIMER) {
+                if (event.getType() != ComplexEvent.Type.TIMER) {
 
                     streamEventChunk.remove(); //We might have the rest of the events linked to this event forming a chain.
 
@@ -100,7 +100,8 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                         }
                     }
 
-                    ArrayList<StreamEvent> eventList = eventTreeMap.get(timestamp);
+                    ArrayList<StreamEvent> eventList;
+                    eventList = eventTreeMap.get(timestamp);
                     if (eventList == null) {
                         eventList = new ArrayList<StreamEvent>();
                     }
@@ -149,7 +150,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                         }
                     }
                 } else {
-                    if(expiredEventTreeMap.size() > 0) {
+                    if (expiredEventTreeMap.size() > 0) {
                         TreeMap<Long, ArrayList<StreamEvent>> expiredEventTreeMapSnapShot = expiredEventTreeMap;
                         expiredEventTreeMap = new TreeMap<Long, ArrayList<StreamEvent>>();
                         onTimerEvent(expiredEventTreeMapSnapShot, nextProcessor);
@@ -157,7 +158,6 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                         scheduler.notifyAt(lastScheduledTimestamp);
                     }
                 }
-
 
 
             }
@@ -183,7 +183,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
         }
 
         //This is the most basic case. Here we do not use a timer. The basic K-slack algorithm is implemented.
-        if(attributeExpressionExecutors.length == 1){
+        if (attributeExpressionExecutors.length == 1) {
             if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.LONG) {
                 timestampExecutor = attributeExpressionExecutors[0];
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
@@ -193,7 +193,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                         attributeExpressionExecutors[0].getReturnType());
             }
             //In the following case we have the timer operating in background. But we do not impose a K-slack window length.
-        }else if(attributeExpressionExecutors.length == 2){
+        } else if (attributeExpressionExecutors.length == 2) {
             if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.LONG) {
                 timestampExecutor = attributeExpressionExecutors[0];
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
@@ -204,7 +204,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
 
             if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                TIMER_DURATION = (Long)attributeExpressionExecutors[1].execute(null);
+                TIMER_DURATION = (Long) attributeExpressionExecutors[1].execute(null);
                 attributes.add(new Attribute("beta1", Attribute.Type.LONG));
             } else {
                 throw new ExecutionPlanCreationException("Invalid parameter type found for the second argument of " +
@@ -212,7 +212,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                         attributeExpressionExecutors[1].getReturnType());
             }
             //In the third case we have both the timer operating in the background and we have also specified a K-slack window length.
-        }else if(attributeExpressionExecutors.length == 3){
+        } else if (attributeExpressionExecutors.length == 3) {
             if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.LONG) {
                 timestampExecutor = attributeExpressionExecutors[0];
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
@@ -223,7 +223,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
 
             if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                TIMER_DURATION = (Long)attributeExpressionExecutors[1].execute(null);
+                TIMER_DURATION = (Long) attributeExpressionExecutors[1].execute(null);
                 attributes.add(new Attribute("beta1", Attribute.Type.LONG));
             } else {
                 throw new ExecutionPlanCreationException("Invalid parameter type found for the second argument of " +
@@ -232,7 +232,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
 
             if (attributeExpressionExecutors[2].getReturnType() == Attribute.Type.LONG) {
-                MAX_K = (Long)attributeExpressionExecutors[2].execute(null);
+                MAX_K = (Long) attributeExpressionExecutors[2].execute(null);
                 attributes.add(new Attribute("beta2", Attribute.Type.LONG));
             } else {
                 throw new ExecutionPlanCreationException("Invalid parameter type found for the third argument of " +
@@ -241,7 +241,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
             //In the fourth case we have an additional boolean flag other than the above three parameters. If the flag
             // is set to true any out-of-order events which arrive after the expiration of K-slack are discarded.
-        }else if(attributeExpressionExecutors.length == 4){
+        } else if (attributeExpressionExecutors.length == 4) {
             if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.LONG) {
                 timestampExecutor = attributeExpressionExecutors[0];
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
@@ -252,7 +252,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
 
             if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                TIMER_DURATION = (Long)attributeExpressionExecutors[1].execute(null);
+                TIMER_DURATION = (Long) attributeExpressionExecutors[1].execute(null);
                 attributes.add(new Attribute("beta1", Attribute.Type.LONG));
             } else {
                 throw new ExecutionPlanCreationException("Invalid parameter type found for the second argument of " +
@@ -261,7 +261,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
 
             if (attributeExpressionExecutors[2].getReturnType() == Attribute.Type.LONG) {
-                MAX_K = (Long)attributeExpressionExecutors[2].execute(null);
+                MAX_K = (Long) attributeExpressionExecutors[2].execute(null);
                 attributes.add(new Attribute("beta2", Attribute.Type.LONG));
             } else {
                 throw new ExecutionPlanCreationException("Invalid parameter type found for the third argument of " +
@@ -270,7 +270,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
 
             if (attributeExpressionExecutors[3].getReturnType() == Attribute.Type.BOOL) {
-                expireFlag = (Boolean)attributeExpressionExecutors[3].execute(null);
+                expireFlag = (Boolean) attributeExpressionExecutors[3].execute(null);
                 attributes.add(new Attribute("beta3", Attribute.Type.BOOL));
             } else {
                 throw new ExecutionPlanCreationException("Invalid parameter type found for the fourth argument of " +
@@ -289,7 +289,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
         eventTreeMap = new TreeMap<Long, ArrayList<StreamEvent>>();
         expiredEventTreeMap = new TreeMap<Long, ArrayList<StreamEvent>>();
 
-        if(TIMER_DURATION != -1l && scheduler != null) {
+        if (TIMER_DURATION != -1L && scheduler != null) {
             lastScheduledTimestamp = executionPlanContext.getTimestampGenerator().currentTime() + TIMER_DURATION;
             scheduler.notifyAt(lastScheduledTimestamp);
         }
