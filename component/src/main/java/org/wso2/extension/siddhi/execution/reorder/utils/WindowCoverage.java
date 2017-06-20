@@ -24,8 +24,8 @@ public class WindowCoverage {
     /**
      * Calculate Window Coverage Threshold
      *
-     * @param criticalValue
-     * @param listOfData
+     * @param criticalValue critical value for algorithm
+     * @param listOfData List of data to calculate window coverage
      * @return windowCoverageThreshold
      */
 
@@ -89,8 +89,8 @@ public class WindowCoverage {
     /**
      * Calculate Window Coverage
      *
-     * @param eventTimestamps
-     * @param windowSize
+     * @param eventTimestamps Timestamp of events in window
+     * @param windowSize Size of window
      * @return runtimeWindowCoverage
      */
 
