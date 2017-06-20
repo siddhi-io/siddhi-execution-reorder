@@ -18,22 +18,24 @@
 
 package org.wso2.extension.siddhi.execution.reorder;
 
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
 import org.wso2.siddhi.core.event.stream.StreamEventCloner;
 import org.wso2.siddhi.core.event.stream.populater.ComplexEventPopulater;
-import org.wso2.siddhi.core.exception.ExecutionPlanCreationException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.executor.ExpressionExecutor;
 import org.wso2.siddhi.core.query.processor.Processor;
 import org.wso2.siddhi.core.query.processor.SchedulingProcessor;
 import org.wso2.siddhi.core.query.processor.stream.StreamProcessor;
 import org.wso2.siddhi.core.util.Scheduler;
+import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.query.api.definition.AbstractDefinition;
 import org.wso2.siddhi.query.api.definition.Attribute;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,12 +49,12 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class KSlackExtension extends StreamProcessor implements SchedulingProcessor {
     private long k = 0; //In the beginning the K is zero.
-    private long greatestTimestamp = 0; //Used to track the greatest timestamp of tuples seen so far in the stream history.
+    private long greatestTimestamp = 0; //Used to track the greatest timestamp of tuples in the stream history.
     private TreeMap<Long, ArrayList<StreamEvent>> eventTreeMap;
     private TreeMap<Long, ArrayList<StreamEvent>> expiredEventTreeMap;
     private ExpressionExecutor timestampExecutor;
-    private long MAX_K = Long.MAX_VALUE;
-    private long TIMER_DURATION = -1L;
+    private long maxK = Long.MAX_VALUE;
+    private long timerDuration = -1L;
     private boolean expireFlag = false;
     private long lastSentTimeStamp = -1L;
     private Scheduler scheduler;
@@ -70,27 +72,27 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
     }
 
     @Override
-    public Object[] currentState() {
-        return new Object[0];
+    public Map<String, Object> currentState() {
+        return new HashMap<String, Object>();
     }
 
-    @Override
-    public void restoreState(Object[] state) {
-        //Do nothing
+    @Override public void restoreState(Map<String, Object> map) {
+
     }
 
     @Override
     protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
                            StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater) {
         ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(false);
-        lock.lock();
         try {
+        lock.lock();
             while (streamEventChunk.hasNext()) {
                 StreamEvent event = streamEventChunk.next();
 
                 if (event.getType() != ComplexEvent.Type.TIMER) {
 
-                    streamEventChunk.remove(); //We might have the rest of the events linked to this event forming a chain.
+                    streamEventChunk.remove();
+                    //We might have the rest of the events linked to this event forming a chain.
 
                     long timestamp = (Long) timestampExecutor.execute(event);
 
@@ -114,14 +116,15 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                         long timeDifference = greatestTimestamp - minTimestamp;
 
                         if (timeDifference > k) {
-                            if (timeDifference < MAX_K) {
+                            if (timeDifference < maxK) {
                                 k = timeDifference;
                             } else {
-                                k = MAX_K;
+                                k = maxK;
                             }
                         }
 
-                        Iterator<Map.Entry<Long, ArrayList<StreamEvent>>> entryIterator = eventTreeMap.entrySet().iterator();
+                        Iterator<Map.Entry<Long, ArrayList<StreamEvent>>> entryIterator = eventTreeMap.entrySet()
+                                .iterator();
                         while (entryIterator.hasNext()) {
                             Map.Entry<Long, ArrayList<StreamEvent>> entry = entryIterator.next();
                             ArrayList<StreamEvent> list = expiredEventTreeMap.get(entry.getKey());
@@ -154,7 +157,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                         TreeMap<Long, ArrayList<StreamEvent>> expiredEventTreeMapSnapShot = expiredEventTreeMap;
                         expiredEventTreeMap = new TreeMap<Long, ArrayList<StreamEvent>>();
                         onTimerEvent(expiredEventTreeMapSnapShot, nextProcessor);
-                        lastScheduledTimestamp = lastScheduledTimestamp + TIMER_DURATION;
+                        lastScheduledTimestamp = lastScheduledTimestamp + timerDuration;
                         scheduler.notifyAt(lastScheduledTimestamp);
                     }
                 }
@@ -163,22 +166,23 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
         } catch (ArrayIndexOutOfBoundsException ec) {
             //This happens due to user specifying an invalid field index.
-            throw new ExecutionPlanCreationException("The very first parameter must be an Integer with a valid " +
+            throw new SiddhiAppCreationException("The very first parameter must be an Integer with a valid " +
                     " field index (0 to (fieldsLength-1)).");
+        } finally {
+            lock.unlock();
         }
-        lock.unlock();
         nextProcessor.process(complexEventChunk);
     }
 
     @Override
-    protected List<Attribute> init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors,
-                                   ExecutionPlanContext executionPlanContext) {
+    protected List<Attribute> init(AbstractDefinition abstractDefinition, ExpressionExecutor[] expressionExecutors,
+                                   ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 
         if (attributeExpressionLength > 4) {
-            throw new ExecutionPlanCreationException("Maximum four input parameters can be specified for KSlack. " +
-                    " Timestamp field (long), k-slack buffer expiration time-out window (long), Max_K size (long), and boolean " +
-                    " flag to indicate whether the late events should get discarded. But found " +
+            throw new SiddhiAppCreationException("Maximum four input parameters can be specified for KSlack. " +
+                    " Timestamp field (long), k-slack buffer expiration time-out window (long), Max_K size (long), "
+                    + "and boolean  flag to indicate whether the late events should get discarded. But found " +
                     attributeExpressionLength + " attributes.");
         }
 
@@ -188,54 +192,56 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                 timestampExecutor = attributeExpressionExecutors[0];
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the first argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the first argument of " +
                         "reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[0].getReturnType());
             }
-            //In the following case we have the timer operating in background. But we do not impose a K-slack window length.
+            //In the following case we have the timer operating in background. But we do not impose a K-slack window
+            // length.
         } else if (attributeExpressionExecutors.length == 2) {
             if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.LONG) {
                 timestampExecutor = attributeExpressionExecutors[0];
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the first argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the first argument of " +
                         " reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[0].getReturnType());
             }
 
             if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                TIMER_DURATION = (Long) attributeExpressionExecutors[1].execute(null);
+                timerDuration = (Long) attributeExpressionExecutors[1].execute(null);
                 attributes.add(new Attribute("beta1", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the second argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the second argument of " +
                         " reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[1].getReturnType());
             }
-            //In the third case we have both the timer operating in the background and we have also specified a K-slack window length.
+            //In the third case we have both the timer operating in the background and we have also specified a K-slack
+            // window length.
         } else if (attributeExpressionExecutors.length == 3) {
             if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.LONG) {
                 timestampExecutor = attributeExpressionExecutors[0];
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the first argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the first argument of " +
                         " reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[0].getReturnType());
             }
 
             if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                TIMER_DURATION = (Long) attributeExpressionExecutors[1].execute(null);
+                timerDuration = (Long) attributeExpressionExecutors[1].execute(null);
                 attributes.add(new Attribute("beta1", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the second argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the second argument of " +
                         " reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[1].getReturnType());
             }
 
             if (attributeExpressionExecutors[2].getReturnType() == Attribute.Type.LONG) {
-                MAX_K = (Long) attributeExpressionExecutors[2].execute(null);
+                maxK = (Long) attributeExpressionExecutors[2].execute(null);
                 attributes.add(new Attribute("beta2", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the third argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the third argument of " +
                         " reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[2].getReturnType());
             }
@@ -246,25 +252,25 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                 timestampExecutor = attributeExpressionExecutors[0];
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the first argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the first argument of " +
                         " reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[0].getReturnType());
             }
 
             if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                TIMER_DURATION = (Long) attributeExpressionExecutors[1].execute(null);
+                timerDuration = (Long) attributeExpressionExecutors[1].execute(null);
                 attributes.add(new Attribute("beta1", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the second argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the second argument of " +
                         " reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[1].getReturnType());
             }
 
             if (attributeExpressionExecutors[2].getReturnType() == Attribute.Type.LONG) {
-                MAX_K = (Long) attributeExpressionExecutors[2].execute(null);
+                maxK = (Long) attributeExpressionExecutors[2].execute(null);
                 attributes.add(new Attribute("beta2", Attribute.Type.LONG));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the third argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the third argument of " +
                         " reorder:kslack() function. Required LONG, but found " +
                         attributeExpressionExecutors[2].getReturnType());
             }
@@ -273,7 +279,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                 expireFlag = (Boolean) attributeExpressionExecutors[3].execute(null);
                 attributes.add(new Attribute("beta3", Attribute.Type.BOOL));
             } else {
-                throw new ExecutionPlanCreationException("Invalid parameter type found for the fourth argument of " +
+                throw new SiddhiAppCreationException("Invalid parameter type found for the fourth argument of " +
                         " reorder:kslack() function. Required BOOL, but found " +
                         attributeExpressionExecutors[3].getReturnType());
             }
@@ -282,15 +288,15 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
         if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.LONG) {
             timestampExecutor = attributeExpressionExecutors[0];
         } else {
-            throw new ExecutionPlanCreationException("Return type expected by KSlack is LONG but found " +
+            throw new SiddhiAppCreationException("Return type expected by KSlack is LONG but found " +
                     attributeExpressionExecutors[0].getReturnType());
         }
 
         eventTreeMap = new TreeMap<Long, ArrayList<StreamEvent>>();
         expiredEventTreeMap = new TreeMap<Long, ArrayList<StreamEvent>>();
 
-        if (TIMER_DURATION != -1L && scheduler != null) {
-            lastScheduledTimestamp = executionPlanContext.getTimestampGenerator().currentTime() + TIMER_DURATION;
+        if (timerDuration != -1L && scheduler != null) {
+            lastScheduledTimestamp = siddhiAppContext.getTimestampGenerator().currentTime() + timerDuration;
             scheduler.notifyAt(lastScheduledTimestamp);
         }
         return attributes;
@@ -300,7 +306,7 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
     public void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
         if (lastScheduledTimestamp < 0) {
-            lastScheduledTimestamp = executionPlanContext.getTimestampGenerator().currentTime() + TIMER_DURATION;
+            lastScheduledTimestamp = siddhiAppContext.getTimestampGenerator().currentTime() + timerDuration;
             scheduler.notifyAt(lastScheduledTimestamp);
         }
     }

@@ -4,10 +4,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * This class calculate the window coverage
+ */
 public class WindowCoverage {
     private double errorThreshold;
 
-    public WindowCoverage(double errorThreshold){
+    public WindowCoverage(double errorThreshold) {
         this.errorThreshold = errorThreshold;
     }
 
@@ -30,7 +33,7 @@ public class WindowCoverage {
         double mean = calculateMean(listOfData);
         double variance = calculateVariance(listOfData);
         double temp1 = Math.sqrt((Math.pow(mean, 2) + Math.pow(variance, 2)) /
-                (listOfData.size() * Math.pow(mean, 2)));
+                                         (listOfData.size() * Math.pow(mean, 2)));
         double temp2 = Math.pow(criticalValue, 2) * Math.pow(temp1, 2);
         double a1, b1, c1, b2, c2;
         double windowCoverageThreshold;
@@ -67,7 +70,7 @@ public class WindowCoverage {
         return windowCoverageThreshold;
     }
 
-    private double calculateMean(List<Double> listOfData){
+    private double calculateMean(List<Double> listOfData) {
         double sum = 0;
         for (Double aListOfData : listOfData) {
             sum += aListOfData;
@@ -75,7 +78,7 @@ public class WindowCoverage {
         return sum / listOfData.size();
     }
 
-    private  double calculateVariance(List<Double> listOfData){
+    private double calculateVariance(List<Double> listOfData) {
         double squaredSum = 0;
         for (Double aListOfData : listOfData) {
             squaredSum += Math.pow((calculateMean(listOfData) - aListOfData), 2);
@@ -91,7 +94,7 @@ public class WindowCoverage {
      * @return runtimeWindowCoverage
      */
 
-    public double calculateRuntimeWindowCoverage(List<Long> eventTimestamps, long windowSize){
+    public double calculateRuntimeWindowCoverage(List<Long> eventTimestamps, long windowSize) {
         double runtimeWindowCoverage = -1;
         int numerator = 0;
         int denominator = 0;
@@ -114,7 +117,7 @@ public class WindowCoverage {
             }
             for (long i = edgeValue; i <= largestTimestamp; i++) {
                 int z = eventTimestamps.indexOf(i);
-                if(z >= 0) {
+                if (z >= 0) {
                     if ((z <= indexOfLargestTimestamp) && (z >= lowerIndex)) {
                         numerator += 1;
                     }
