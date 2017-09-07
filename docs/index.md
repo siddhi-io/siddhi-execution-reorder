@@ -2,7 +2,7 @@ siddhi-execution-reorder
 ======================================
 
 The **siddhi-execution-reorder extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> that is used for reordering events from an unordered event stream.
-Reorder extension is implemented using the K-Slack and alpha K-Stack algorithms.
+Reorder extension is implemented using the K-Slack and alpha K-Stack algorithm.
 
 Find some useful links below:
 
