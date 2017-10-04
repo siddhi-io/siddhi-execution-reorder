@@ -12,7 +12,7 @@ Find some useful links below:
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-execution-reorder/api/4.0.3-SNAPSHOT">4.0.3-SNAPSHOT</a>.
+Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-execution-reorder/api/4.0.4-SNAPSHOT">4.0.4-SNAPSHOT</a>.
 
 ## How to use 
 
@@ -46,7 +46,7 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-execution-reorder/api/4.0.3-SNAPSHOT/#reorder-stream-processor">reorder</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processors">Stream Processor</a>)*<br><div style="padding-left: 1em;"><p>The following code conducts reordering of an out-of-order event stream. This implements the Alpha K-Slack based disorder handling algorithm which was originally<br>&nbsp;described in http://dl.acm.org/citation.cfm?doid=2675743.2771828</p></div>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-execution-reorder/api/4.0.4-SNAPSHOT/#reorder-stream-processor">reorder</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processors">Stream Processor</a>)*<br><div style="padding-left: 1em;"><p>The following code conducts reordering of an out-of-order event stream. This implements the Alpha K-Slack based disorder handling algorithm which was originally<br>&nbsp;described in http://dl.acm.org/citation.cfm?doid=2675743.2771828</p></div>
 
 ## How to Contribute
  
