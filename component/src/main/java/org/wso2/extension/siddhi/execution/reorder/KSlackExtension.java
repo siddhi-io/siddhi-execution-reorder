@@ -18,6 +18,10 @@
 
 package org.wso2.extension.siddhi.execution.reorder;
 
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
@@ -47,6 +51,47 @@ import java.util.concurrent.locks.ReentrantLock;
  * This implements the K-Slack based disorder handling algorithm which was originally described in
  * https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf
  */
+@Extension(
+        name = "reorder",
+        namespace = "kslack",
+        description = "This stream processor extension performs reordering of an out-of-order event stream.\n" +
+                " It implements the K-Slack based out-of-order handling algorithm (originally described in \n" +
+                "https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf)",
+        parameters = {
+                @Parameter(name = "timestamp",
+                        description = "Attribute used for used for ordering the events",
+                        type = {DataType.LONG}),
+                @Parameter(name = "timer.timeout",
+                        description = "Corresponds to a fixed time-out value in milliseconds, which is set at " +
+                                "the beginning of the process. " +
+                                "Once the time-out value expires, the extension drains all the events that are " +
+                                "buffered within the reorder extension to outside. The time out has been implemented " +
+                                "internally using a timer. The events buffered within the extension are released " +
+                                "each time the timer ticks.",
+                        defaultValue = "-1 (timeout is infinite)",
+                        type = {DataType.LONG},
+                        optional = true),
+                @Parameter(name = "max.k",
+                        description = "The maximum threshold value for K parameter in the K-Slack algorithm",
+                        defaultValue = "9,223,372,036,854,775,807 (The maximum Long value)",
+                        type = {DataType.LONG},
+                        optional = true),
+                @Parameter(name = "discard.flag",
+                        description = "Indicates whether the out-of-order events which appear after the expiration " +
+                                "of the K-slack window should get discarded or not",
+                        defaultValue = "false",
+                        type = {DataType.BOOL},
+                        optional = true)
+        },
+        examples = @Example(
+                syntax = "define stream inputStream (eventtt long, price long, volume long);\n" +
+                        "@info(name = 'query1')\n" +
+                        "from inputStream#reorder:kslack(eventtt, 1000L)\n" +
+                        "select eventtt, price, volume\n" +
+                        "insert into outputStream;",
+                description = "This query performs reordering based on the 'eventtt' attribute values. The " +
+                        "timeout value is set to 1000 milliseconds")
+)
 public class KSlackExtension extends StreamProcessor implements SchedulingProcessor {
     private long k = 0; //In the beginning the K is zero.
     private long greatestTimestamp = 0; //Used to track the greatest timestamp of tuples in the stream history.

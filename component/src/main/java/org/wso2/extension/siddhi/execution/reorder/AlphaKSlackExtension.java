@@ -22,6 +22,8 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import org.wso2.extension.siddhi.execution.reorder.utils.WindowCoverage;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
@@ -53,13 +55,72 @@ import java.util.concurrent.locks.ReentrantLock;
  * This implements the Alpha K-Slack based disorder handling algorithm which was originally
  * described in http://dl.acm.org/citation.cfm?doid=2675743.2771828
  */
+
 @Extension(
         name = "reorder",
         namespace = "akslack",
-        description = "The following code conducts reordering of an out-of-order event stream. This implements the "
-                + "Alpha K-Slack based disorder handling algorithm which was originally\n"
-                + " described in http://dl.acm.org/citation.cfm?doid=2675743.2771828",
-        examples = @Example(description = "TBD", syntax = "TBD")
+        description = "This stream processor extension performs reordering of an out-of-order event stream.\n" +
+                " It implements the Alpha K-Slack based out-of-order handling algorithm (originally described in \n" +
+                "http://dl.acm.org/citation.cfm?doid=2675743.2771828)",
+        parameters = {
+                @Parameter(name = "timestamp",
+                        description = "Attribute used for used for ordering the events",
+                        type = {DataType.LONG}),
+                @Parameter(name = "correlation.field",
+                        description = "Corresponds to the data field of which the accuracy directly gets affected " +
+                                "by the adaptive operation of the K-Slack extension. This field is used by the " +
+                                "Alpha K-Slack to calculate the runtime window coverage threshold which is an upper " +
+                                "limit set for the unsuccessfully handled late arrivals",
+                        type = {DataType.DOUBLE}),
+                @Parameter(name = "batch.size",
+                        description = "The parameter batch.size denotes the number of events that should be " +
+                                "considered in the calculation of an alpha value. batch.size should be a value " +
+                                "which should be greater than or equals to 15",
+                        defaultValue = "10,000",
+                        type = {DataType.LONG},
+                        optional = true),
+                @Parameter(name = "timer.timeout",
+                        description = "Corresponds to a fixed time-out value in milliseconds, which is set at " +
+                                "the beginning of the process. " +
+                                "Once the time-out value expires, the extension drains all the events that are " +
+                                "buffered within the reorder extension to outside. The time out has been implemented " +
+                                "internally using a timer. The events buffered within the extension are released " +
+                                "each time the timer ticks.",
+                        defaultValue = "-1 (timeout is infinite)",
+                        type = {DataType.LONG},
+                        optional = true),
+                @Parameter(name = "max.k",
+                        description = "The maximum threshold value for K parameter in the Alpha K-Slack algorithm",
+                        defaultValue = "9,223,372,036,854,775,807 (The maximum Long value)",
+                        type = {DataType.LONG},
+                        optional = true),
+                @Parameter(name = "discard.flag",
+                        description = "Indicates whether the out-of-order events which appear after the expiration " +
+                                "of the Alpha K-slack window should get discarded or not",
+                        defaultValue = "false",
+                        type = {DataType.BOOL},
+                        optional = true),
+                @Parameter(name = "error.threshold",
+                        description = "Error threshold to be applied in Alpha K-Slack algorithm. This parameter must " +
+                                "be defined simultaneously with confidenceLevel",
+                        defaultValue = "0.03 (3%)",
+                        type = {DataType.DOUBLE},
+                        optional = true),
+                @Parameter(name = "confidence.level",
+                        description = "Confidence level to be applied in Alpha K-Slack algorithm. This parameter " +
+                                "must be defined simultaneously with errorThreshold",
+                        defaultValue = "0.95 (95%)",
+                        type = {DataType.DOUBLE},
+                        optional = true)
+        },
+        examples = @Example(
+                syntax = "define stream inputStream (eventtt long,data double);\n" +
+                        "@info(name = 'query1')\n" +
+                        "from inputStream#reorder:akslack(eventtt, data, 20l)\n" +
+                        "select eventtt, data\n" +
+                        "insert into outputStream;",
+                description = "This query performs reordering based on the 'eventtt' attribute values. The " +
+                        "batch size applied here is 20.")
 )
 public class AlphaKSlackExtension extends StreamProcessor implements SchedulingProcessor {
     private Long k = 0L; //In the beginning the K is zero.
