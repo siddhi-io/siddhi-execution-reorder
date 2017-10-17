@@ -80,9 +80,13 @@ import java.util.concurrent.locks.ReentrantLock;
                         type = {DataType.LONG},
                         optional = true),
                 @Parameter(name = "timer.timeout",
-                        description = "When the given timeout elapses, the reordering would be " +
-                                "executed on the buffered events and results would be emitted",
-                        defaultValue = "-1",
+                        description = "Corresponds to a fixed time-out value in milliseconds, which is set at " +
+                                "the beginning of the process. " +
+                                "Once the time-out value expires, the extension drains all the events that are " +
+                                "buffered within the reorder extension to outside. The time out has been implemented " +
+                                "internally using a timer. The events buffered within the extension are released " +
+                                "each time the timer ticks.",
+                        defaultValue = "-1 (timeout is infinite)",
                         type = {DataType.LONG},
                         optional = true),
                 @Parameter(name = "max.k",
@@ -111,7 +115,8 @@ import java.util.concurrent.locks.ReentrantLock;
         },
         examples = @Example(
                 syntax = "define stream inputStream (eventtt long,data double);\n" +
-                        "@info(name = 'query1') from inputStream#reorder:akslack(eventtt, data, 20l)\n" +
+                        "@info(name = 'query1')\n" +
+                        "from inputStream#reorder:akslack(eventtt, data, 20l)\n" +
                         "select eventtt, data\n" +
                         "insert into outputStream;",
                 description = "This query performs reordering based on the 'eventtt' attribute values. The " +
