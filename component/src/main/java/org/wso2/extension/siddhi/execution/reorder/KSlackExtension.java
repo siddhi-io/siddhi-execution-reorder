@@ -59,7 +59,7 @@ import java.util.concurrent.locks.ReentrantLock;
                 "https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf)",
         parameters = {
                 @Parameter(name = "timestamp",
-                        description = "Attribute used for used for ordering the events",
+                        description = "Attribute used for ordering the events",
                         type = {DataType.LONG}),
                 @Parameter(name = "timer.timeout",
                         description = "Corresponds to a fixed time-out value in milliseconds, which is set at " +
@@ -78,7 +78,8 @@ import java.util.concurrent.locks.ReentrantLock;
                         optional = true),
                 @Parameter(name = "discard.flag",
                         description = "Indicates whether the out-of-order events which appear after the expiration " +
-                                "of the K-slack window should get discarded or not",
+                                "of the K-slack window should get discarded or not. When this value is set " +
+                                "to true, the events would get discarded",
                         defaultValue = "false",
                         type = {DataType.BOOL},
                         optional = true)
@@ -86,11 +87,11 @@ import java.util.concurrent.locks.ReentrantLock;
         examples = @Example(
                 syntax = "define stream inputStream (eventtt long, price long, volume long);\n" +
                         "@info(name = 'query1')\n" +
-                        "from inputStream#reorder:kslack(eventtt, 1000L)\n" +
+                        "from inputStream#reorder:kslack(eventtt, 1000)\n" +
                         "select eventtt, price, volume\n" +
                         "insert into outputStream;",
-                description = "This query performs reordering based on the 'eventtt' attribute values. The " +
-                        "timeout value is set to 1000 milliseconds")
+                description = "This query performs reordering based on the 'eventtt' attribute values. In this " +
+                        "example, the timeout value is set to 1000 milliseconds")
 )
 public class KSlackExtension extends StreamProcessor implements SchedulingProcessor {
     private long k = 0; //In the beginning the K is zero.
