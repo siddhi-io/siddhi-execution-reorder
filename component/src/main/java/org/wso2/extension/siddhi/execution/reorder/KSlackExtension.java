@@ -87,11 +87,11 @@ import java.util.concurrent.locks.ReentrantLock;
         examples = @Example(
                 syntax = "define stream inputStream (eventtt long, price long, volume long);\n" +
                         "@info(name = 'query1')\n" +
-                        "from inputStream#reorder:kslack(eventtt, 1000L)\n" +
+                        "from inputStream#reorder:kslack(eventtt, 1000)\n" +
                         "select eventtt, price, volume\n" +
                         "insert into outputStream;",
-                description = "This query performs reordering based on the 'eventtt' attribute values. The " +
-                        "timeout value is set to 1000 milliseconds")
+                description = "This query performs reordering based on the 'eventtt' attribute values. In this " +
+                        "example, the timeout value is set to 1000 milliseconds")
 )
 public class KSlackExtension extends StreamProcessor implements SchedulingProcessor {
     private long k = 0; //In the beginning the K is zero.

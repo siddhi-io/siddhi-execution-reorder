@@ -60,7 +60,7 @@ import java.util.concurrent.locks.ReentrantLock;
         name = "reorder",
         namespace = "akslack",
         description = "This stream processor extension performs reordering of an out-of-order event stream.\n" +
-                " It implements the Alpha K-Slack based out-of-order handling algorithm (originally described in \n" +
+                " It implements the AQ-K-Slack based out-of-order handling algorithm (originally described in \n" +
                 "http://dl.acm.org/citation.cfm?doid=2675743.2771828)",
         parameters = {
                 @Parameter(name = "timestamp",
@@ -68,7 +68,7 @@ import java.util.concurrent.locks.ReentrantLock;
                         type = {DataType.LONG}),
                 @Parameter(name = "correlation.field",
                         description = "Corresponds to the data field of which the accuracy directly gets affected " +
-                                "by the adaptive operation of the K-Slack extension. This field is used by the " +
+                                "by the adaptive operation of the Alpha K-Slack extension. This field is used by the " +
                                 "Alpha K-Slack to calculate the runtime window coverage threshold which is an upper " +
                                 "limit set for the unsuccessfully handled late arrivals",
                         type = {DataType.DOUBLE}),
@@ -117,11 +117,11 @@ import java.util.concurrent.locks.ReentrantLock;
         examples = @Example(
                 syntax = "define stream inputStream (eventtt long,data double);\n" +
                         "@info(name = 'query1')\n" +
-                        "from inputStream#reorder:akslack(eventtt, data, 20l)\n" +
+                        "from inputStream#reorder:akslack(eventtt, data, 20)\n" +
                         "select eventtt, data\n" +
                         "insert into outputStream;",
-                description = "This query performs reordering based on the 'eventtt' attribute values. The " +
-                        "batch size applied here is 20.")
+                description = "This query performs reordering based on the 'eventtt' attribute values. In this " +
+                        "example, 20 represents the batch size")
 )
 public class AlphaKSlackExtension extends StreamProcessor implements SchedulingProcessor {
     private Long k = 0L; //In the beginning the K is zero.
