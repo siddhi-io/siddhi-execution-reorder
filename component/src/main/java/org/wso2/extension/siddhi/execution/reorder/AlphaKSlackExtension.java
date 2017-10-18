@@ -64,7 +64,7 @@ import java.util.concurrent.locks.ReentrantLock;
                 "http://dl.acm.org/citation.cfm?doid=2675743.2771828)",
         parameters = {
                 @Parameter(name = "timestamp",
-                        description = "Attribute used for used for ordering the events",
+                        description = "Attribute used for ordering the events",
                         type = {DataType.LONG}),
                 @Parameter(name = "correlation.field",
                         description = "Corresponds to the data field of which the accuracy directly gets affected " +
@@ -96,7 +96,8 @@ import java.util.concurrent.locks.ReentrantLock;
                         optional = true),
                 @Parameter(name = "discard.flag",
                         description = "Indicates whether the out-of-order events which appear after the expiration " +
-                                "of the Alpha K-slack window should get discarded or not",
+                                "of the Alpha K-slack window should get discarded or not. When this value is set " +
+                                "to true, the events would get discarded",
                         defaultValue = "false",
                         type = {DataType.BOOL},
                         optional = true),

@@ -59,7 +59,7 @@ import java.util.concurrent.locks.ReentrantLock;
                 "https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf)",
         parameters = {
                 @Parameter(name = "timestamp",
-                        description = "Attribute used for used for ordering the events",
+                        description = "Attribute used for ordering the events",
                         type = {DataType.LONG}),
                 @Parameter(name = "timer.timeout",
                         description = "Corresponds to a fixed time-out value in milliseconds, which is set at " +
@@ -78,7 +78,8 @@ import java.util.concurrent.locks.ReentrantLock;
                         optional = true),
                 @Parameter(name = "discard.flag",
                         description = "Indicates whether the out-of-order events which appear after the expiration " +
-                                "of the K-slack window should get discarded or not",
+                                "of the K-slack window should get discarded or not. When this value is set " +
+                                "to true, the events would get discarded",
                         defaultValue = "false",
                         type = {DataType.BOOL},
                         optional = true)
