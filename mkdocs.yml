@@ -16,6 +16,7 @@ pages:
 - Welcome to WSO2 Siddhi Execution Reorder: index.md
 - License: license.md
 - API Docs:
+  - 4.0.7: api/4.0.7.md
   - 4.0.6: api/4.0.6.md
   - latest: api/latest.md
 theme: material
