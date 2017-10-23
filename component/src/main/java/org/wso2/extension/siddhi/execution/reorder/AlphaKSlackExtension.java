@@ -186,11 +186,11 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
         largestTimestamp = (Long) map.get("largestTimestamp");
         lastSentTimestamp = (Long) map.get("lastSentTimestamp");
         lastScheduledTimestamp = (Long) map.get("lastScheduledTimestamp");
-        previousAlpha = (Long) map.get("previousAlpha");
+        previousAlpha = (Double) map.get("previousAlpha");
         counter = (Integer) map.get("counter");
-        previousError = (Long) map.get("previousError");
-        kp = (Long) map.get("kp");
-        kd = (Long) map.get("kd");
+        previousError = (Double) map.get("previousError");
+        kp = (Double) map.get("kp");
+        kd = (Double) map.get("kd");
         primaryTreeMap = (TreeMap) map.get("primaryTreeMap");
         secondaryTreeMap = (TreeMap) map.get("secondaryTreeMap");
         dataItemList = (List) map.get("dataItemList");
