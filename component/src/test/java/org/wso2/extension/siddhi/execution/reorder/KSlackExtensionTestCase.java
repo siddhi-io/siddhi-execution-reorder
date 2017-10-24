@@ -24,6 +24,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
 
@@ -211,5 +212,149 @@ public class KSlackExtensionTestCase {
         Thread.sleep(3500);
         executionPlanRuntime.shutdown();
         AssertJUnit.assertEquals("Event count", 10, count);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest3() throws InterruptedException {
+        log.info("KSlackExtensionTestCase for invalid length ");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition =
+                "define stream inputStream (eventtt long, price long, volume long,data string,data2" + " string);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,price,volume,data,data2) "
+                + "select eventtt, price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest4() throws InterruptedException {
+        log.info("KSlackExtensionTestCase Invalid type first argument length 1");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt string, price long, volume long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt) select eventtt, price, "
+                + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest5() throws InterruptedException {
+        log.info("KSlackExtensionTestCase Invalid type first argument length 2");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt string, price long, volume long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt, 1000L) select eventtt, price, "
+                + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest6() throws InterruptedException {
+        log.info("KSlackExtensionTestCase Invalid type second argument length 2");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt long, price string, volume long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,price) select eventtt, "
+                + "price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest7() throws InterruptedException {
+        log.info("KSlackExtensionTestCase for invalid type first argument length 3");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt string, price long, volume long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,price, 1000L) "
+                + "select eventtt, price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest8() throws InterruptedException {
+        log.info("KSlackExtensionTestCase Invalid type second argument length 3");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt long, price string, volume long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,price, 1000L) select eventtt, "
+                + "price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest9() throws InterruptedException {
+        log.info("KSlackExtensionTestCase Invalid type third argument length 3");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt long, price string, volume long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,12l,'maxk') select eventtt, "
+                + "price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest10() throws InterruptedException {
+        log.info("KSlackExtensionTestCase for invalid type first argument length four");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt string, price long, volume long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,price,1000L, volume) "
+                + "select eventtt, price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest11() throws InterruptedException {
+        log.info("KSlackExtensionTestCase for invalid type second argument length four");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt long, price string, volume long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,price,1000L, volume) "
+                + "select eventtt, price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest12() throws InterruptedException {
+        log.info("KSlackExtensionTestCase for invalid type third argument length four");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt long, price long, volume string,data long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,12l,'maxK',true) "
+                + "select eventtt, price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void orderTest13() throws InterruptedException {
+        log.info("KSlackExtensionTestCase for invalid type fourth argument length four");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream inputStream (eventtt long, price long, volume string,data long);";
+        String query = ("@info(name = 'query1') from inputStream#reorder:kslack(eventtt,12l,15l,'expireFlag') "
+                + "select eventtt, price, " + "volume " + "insert into outputStream;");
+        siddhiManager.setExtension("reorder:kslack", KSlackExtension.class);
+        siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+
     }
 }
