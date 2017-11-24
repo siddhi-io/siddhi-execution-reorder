@@ -23,6 +23,7 @@ import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
+import org.wso2.siddhi.core.exception.CannotRestoreSiddhiAppStateException;
 import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.stream.output.StreamCallback;
@@ -427,7 +428,7 @@ public class AlphaKSlackExtensionTestCase {
     }
 
     @Test
-    public void testcase16() throws InterruptedException {
+    public void testcase16() throws InterruptedException, CannotRestoreSiddhiAppStateException {
         log.info("Alpha K-Slack Extension Testcase for current state & restore state");
 
         PersistenceStore persistenceStore = new InMemoryPersistenceStore();
