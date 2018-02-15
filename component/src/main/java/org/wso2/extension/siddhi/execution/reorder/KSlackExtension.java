@@ -52,8 +52,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf
  */
 @Extension(
-        name = "reorder",
-        namespace = "kslack",
+        name = "kslack",
+        namespace = "reorder",
         description = "This stream processor extension performs reordering of an out-of-order event stream.\n" +
                 " It implements the K-Slack based out-of-order handling algorithm (originally described in \n" +
                 "https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf)",
