@@ -57,8 +57,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 
 @Extension(
-        name = "reorder",
-        namespace = "akslack",
+        name = "akslack",
+        namespace = "reorder",
         description = "This stream processor extension performs reordering of an out-of-order event stream.\n" +
                 " It implements the AQ-K-Slack based out-of-order handling algorithm (originally described in \n" +
                 "http://dl.acm.org/citation.cfm?doid=2675743.2771828)",
