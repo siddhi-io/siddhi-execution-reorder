@@ -183,6 +183,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../4.0.16/" title="4.0.16" class="md-nav__link">
+      4.0.16
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../4.0.15/" title="4.0.15" class="md-nav__link">
       4.0.15
     </a>
@@ -330,36 +342,23 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#akslack" title="Akslack" class="md-nav__link">
-    Akslack
+  <a href="#reorder" title="Reorder" class="md-nav__link">
+    Reorder
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reorder-stream-processor" title="reorder (Stream Processor)" class="md-nav__link">
-    reorder (Stream Processor)
+  <a href="#akslack-stream-processor" title="akslack (Stream Processor)" class="md-nav__link">
+    akslack (Stream Processor)
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kslack" title="Kslack" class="md-nav__link">
-    Kslack
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reorder-stream-processor_1" title="reorder (Stream Processor)" class="md-nav__link">
-    reorder (Stream Processor)
+  <a href="#kslack-stream-processor" title="kslack (Stream Processor)" class="md-nav__link">
+    kslack (Stream Processor)
   </a>
   
 </li>
@@ -416,36 +415,23 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#akslack" title="Akslack" class="md-nav__link">
-    Akslack
+  <a href="#reorder" title="Reorder" class="md-nav__link">
+    Reorder
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reorder-stream-processor" title="reorder (Stream Processor)" class="md-nav__link">
-    reorder (Stream Processor)
+  <a href="#akslack-stream-processor" title="akslack (Stream Processor)" class="md-nav__link">
+    akslack (Stream Processor)
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kslack" title="Kslack" class="md-nav__link">
-    Kslack
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reorder-stream-processor_1" title="reorder (Stream Processor)" class="md-nav__link">
-    reorder (Stream Processor)
+  <a href="#kslack-stream-processor" title="kslack (Stream Processor)" class="md-nav__link">
+    kslack (Stream Processor)
   </a>
   
 </li>
@@ -470,13 +456,13 @@
               
                 
                 
-                <h1 id="api-docs-v4015">API Docs - v4.0.15</h1>
-<h2 id="akslack">Akslack</h2>
-<h3 id="reorder-stream-processor">reorder <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processor">(Stream Processor)</a></em></h3>
+                <h1 id="api-docs-v4016">API Docs - v4.0.16</h1>
+<h2 id="reorder">Reorder</h2>
+<h3 id="akslack-stream-processor">akslack <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processor">(Stream Processor)</a></em></h3>
 <p style="word-wrap: break-word">This stream processor extension performs reordering of an out-of-order event stream.<br>&nbsp;It implements the AQ-K-Slack based out-of-order handling algorithm (originally described in <br>http://dl.acm.org/citation.cfm?doid=2675743.2771828)</p>
 
 <p><span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>akslack:reorder(&lt;LONG&gt; timestamp, &lt;DOUBLE&gt; correlation.field, &lt;LONG&gt; batch.size, &lt;LONG&gt; timer.timeout, &lt;LONG&gt; max.k, &lt;BOOL&gt; discard.flag, &lt;DOUBLE&gt; error.threshold, &lt;DOUBLE&gt; confidence.level)
+<pre><code>reorder:akslack(&lt;LONG&gt; timestamp, &lt;DOUBLE&gt; correlation.field, &lt;LONG&gt; batch.size, &lt;LONG&gt; timer.timeout, &lt;LONG&gt; max.k, &lt;BOOL&gt; discard.flag, &lt;DOUBLE&gt; error.threshold, &lt;DOUBLE&gt; confidence.level)
 </code></pre>
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -565,12 +551,11 @@ insert into outputStream;
 
 <p style="word-wrap: break-word">This query performs reordering based on the 'eventtt' attribute values. In this example, 20 represents the batch size</p>
 
-<h2 id="kslack">Kslack</h2>
-<h3 id="reorder-stream-processor_1">reorder <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processor">(Stream Processor)</a></em></h3>
+<h3 id="kslack-stream-processor">kslack <em><a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processor">(Stream Processor)</a></em></h3>
 <p style="word-wrap: break-word">This stream processor extension performs reordering of an out-of-order event stream.<br>&nbsp;It implements the K-Slack based out-of-order handling algorithm (originally described in <br>https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf)</p>
 
 <p><span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>kslack:reorder(&lt;LONG&gt; timestamp, &lt;LONG&gt; timer.timeout, &lt;LONG&gt; max.k, &lt;BOOL&gt; discard.flag)
+<pre><code>reorder:kslack(&lt;LONG&gt; timestamp, &lt;LONG&gt; timer.timeout, &lt;LONG&gt; max.k, &lt;BOOL&gt; discard.flag)
 </code></pre>
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
