@@ -23,6 +23,7 @@ import org.wso2.extension.siddhi.execution.reorder.utils.WindowCoverage;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.ReturnAttribute;
 import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEvent;
@@ -114,6 +115,51 @@ import java.util.concurrent.locks.ReentrantLock;
                         type = {DataType.DOUBLE},
                         optional = true)
         },
+        returnAttributes = {
+                @ReturnAttribute(
+                        name = "beta0",
+                        description = "Timestamp based on which the reordering is performed",
+                        type = {DataType.LONG}
+                ),
+                @ReturnAttribute(
+                        name = "beta1",
+                        description = "An upper limit value assigned for the unsuccessfully handled late arrivals",
+                        type = {DataType.DOUBLE}
+                ),
+                @ReturnAttribute(
+                        name = "beta2",
+                        description = "The number of events that should be considered in the calculation of an alpha " +
+                                "value",
+                        type = {DataType.LONG}
+                ),
+                @ReturnAttribute(
+                        name = "beta3",
+                        description = "Fixed time-out value (in milliseconds) assigned for flushing all the events " +
+                                "buffered inside the extension.",
+                        type = {DataType.LONG}
+                ),
+                @ReturnAttribute(
+                        name = "beta4",
+                        description = "Maximum threshold value assigned for K parameter.",
+                        type = {DataType.LONG}
+                ),
+                @ReturnAttribute(
+                        name = "beta5",
+                        description = "Flag set to indicate whether out-of-order events which arrive after buffer " +
+                                "eviction to be discarded or not",
+                        type = {DataType.BOOL}
+                ),
+                @ReturnAttribute(
+                        name = "beta6",
+                        description = "Error threshold value set for Alpha K-Slack algorithm",
+                        type = {DataType.DOUBLE}
+                ),
+                @ReturnAttribute(
+                        name = "beta7",
+                        description = "Confidence level set for the Alpha K-Slack algorithm",
+                        type = {DataType.DOUBLE}
+                )
+        },
         examples = @Example(
                 syntax = "define stream inputStream (eventtt long,data double);\n" +
                         "@info(name = 'query1')\n" +
@@ -181,7 +227,8 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
         return stateMap;
     }
 
-    @Override public void restoreState(Map<String, Object> map) {
+    @Override
+    public void restoreState(Map<String, Object> map) {
         k = (Long) map.get("k");
         largestTimestamp = (Long) map.get("largestTimestamp");
         lastSentTimestamp = (Long) map.get("lastSentTimestamp");
@@ -241,9 +288,9 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                     if (counter > batchSize) {
                         long adjustedBatchsize = Math.round(batchSize * 0.75);
                         alpha = calculateAlpha(obj.calculateWindowCoverageThreshold(criticalValue,
-                                                                                    dataItemList),
-                                               obj.calculateRuntimeWindowCoverage(timestampList,
-                                                                                  adjustedBatchsize));
+                                dataItemList),
+                                obj.calculateRuntimeWindowCoverage(timestampList,
+                                        adjustedBatchsize));
                         counter = 0;
                         timestampList = new ArrayList<Long>();
                         dataItemList = new ArrayList<Double>();
@@ -270,7 +317,7 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                                 list.addAll(entry.getValue());
                             } else {
                                 secondaryTreeMap.put(entry.getKey(),
-                                                     new ArrayList<StreamEvent>(entry.getValue()));
+                                        new ArrayList<StreamEvent>(entry.getValue()));
                             }
                         }
                         primaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
@@ -324,8 +371,8 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
         } catch (ArrayIndexOutOfBoundsException ec) {
             //This happens due to user specifying an invalid field index.
             throw new SiddhiAppCreationException("The very first parameter must be an " +
-                                                         "Integer with a valid " +
-                                                         " field index (0 to (fieldsLength-1)).");
+                    "Integer with a valid " +
+                    " field index (0 to (fieldsLength-1)).");
         } finally {
             lock.unlock();
         }
@@ -341,17 +388,17 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
         if (attributeExpressionLength > 8 || attributeExpressionLength < 2
                 || attributeExpressionLength == 7) {
             throw new SiddhiAppCreationException("Maximum six input parameters " +
-                                                         "and minimum two input parameters " +
-                                                         "can be specified for AK-Slack. " +
-                                                         " Timestamp (long), velocity (long), batchSize (long), "
-                                                         + "timerTimeout "
-                                                         +
-                                                         "(long), maxK (long), " +
-                                                         "discardFlag (boolean), errorThreshold (double) and "
-                                                         + "confidenceLevel "
-                                                         +
-                                                         "(double)  fields. But found " +
-                                                         attributeExpressionLength + " attributes.");
+                    "and minimum two input parameters " +
+                    "can be specified for AK-Slack. " +
+                    " Timestamp (long), velocity (long), batchSize (long), "
+                    + "timerTimeout "
+                    +
+                    "(long), maxK (long), " +
+                    "discardFlag (boolean), errorThreshold (double) and "
+                    + "confidenceLevel "
+                    +
+                    "(double)  fields. But found " +
+                    attributeExpressionLength + " attributes.");
         }
 
         if (attributeExpressionExecutors.length >= 2) {
@@ -361,11 +408,11 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                 attributes.add(new Attribute("beta0", Attribute.Type.LONG));
             } else {
                 throw new SiddhiAppCreationException("Invalid parameter type found for " +
-                                                             "the first argument of " +
-                                                             " reorder:akslack() function. Required LONG, but "
-                                                             + "found "
-                                                             +
-                                                             attributeExpressionExecutors[0].getReturnType());
+                        "the first argument of " +
+                        " reorder:akslack() function. Required LONG, but "
+                        + "found "
+                        +
+                        attributeExpressionExecutors[0].getReturnType());
             }
 
             if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.DOUBLE) {
@@ -373,11 +420,11 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                 attributes.add(new Attribute("beta1", Attribute.Type.DOUBLE));
             } else {
                 throw new SiddhiAppCreationException("Invalid parameter type found for " +
-                                                             "the second argument of " +
-                                                             " reorder:akslack() function. Required DOUBLE, but "
-                                                             + "found "
-                                                             +
-                                                             attributeExpressionExecutors[1].getReturnType());
+                        "the second argument of " +
+                        " reorder:akslack() function. Required DOUBLE, but "
+                        + "found "
+                        +
+                        attributeExpressionExecutors[1].getReturnType());
             }
 
         }
@@ -389,11 +436,11 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                             attributeExpressionExecutors[2]).getValue();
                 } else {
                     throw new SiddhiAppCreationException("Invalid parameter type found " +
-                                                                 "for the third argument of " +
-                                                                 " reorder:akslack() function. Required LONG, but"
-                                                                 + " found "
-                                                                 +
-                                                                 attributeExpressionExecutors[2].getReturnType());
+                            "for the third argument of " +
+                            " reorder:akslack() function. Required LONG, but"
+                            + " found "
+                            +
+                            attributeExpressionExecutors[2].getReturnType());
                 }
             } else {
                 throw new SiddhiAppCreationException("Batch size parameter must be a constant.");
@@ -409,11 +456,11 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                     attributes.add(new Attribute("beta3", Attribute.Type.LONG));
                 } else {
                     throw new SiddhiAppCreationException("Invalid parameter type found for " +
-                                                                 "the fourth argument of " +
-                                                                 " reorder:akslack() function. Required LONG, but"
-                                                                 + " found "
-                                                                 +
-                                                                 attributeExpressionExecutors[3].getReturnType());
+                            "the fourth argument of " +
+                            " reorder:akslack() function. Required LONG, but"
+                            + " found "
+                            +
+                            attributeExpressionExecutors[3].getReturnType());
                 }
             } else {
                 throw new SiddhiAppCreationException("timerDuration must be a constant");
@@ -430,11 +477,11 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                     attributes.add(new Attribute("beta4", Attribute.Type.LONG));
                 } else {
                     throw new SiddhiAppCreationException("Invalid parameter type found " +
-                                                                 "for the fifth argument of " +
-                                                                 " reorder:akslack() function. Required LONG, but"
-                                                                 + " found "
-                                                                 +
-                                                                 attributeExpressionExecutors[4].getReturnType());
+                            "for the fifth argument of " +
+                            " reorder:akslack() function. Required LONG, but"
+                            + " found "
+                            +
+                            attributeExpressionExecutors[4].getReturnType());
                 }
             } else {
                 throw new SiddhiAppCreationException("maxK must be a constant");
@@ -447,11 +494,11 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                     attributes.add(new Attribute("beta5", Attribute.Type.BOOL));
                 } else {
                     throw new SiddhiAppCreationException("Invalid parameter type found " +
-                                                                 "for the sixth argument of " +
-                                                                 " reorder:akslack() function. Required BOOL, but"
-                                                                 + " found "
-                                                                 +
-                                                                 attributeExpressionExecutors[5].getReturnType());
+                            "for the sixth argument of " +
+                            " reorder:akslack() function. Required BOOL, but"
+                            + " found "
+                            +
+                            attributeExpressionExecutors[5].getReturnType());
                 }
             } else {
                 throw new SiddhiAppCreationException("discardFlag must be a constant");
@@ -466,26 +513,26 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                     attributes.add(new Attribute("beta6", Attribute.Type.DOUBLE));
                 } else {
                     throw new SiddhiAppCreationException("Invalid parameter type found " +
-                                                                 "for the seventh argument of " +
-                                                                 " reorder:akslack() function. Required DOUBLE, "
-                                                                 + "but found "
-                                                                 +
-                                                                 attributeExpressionExecutors[6].getReturnType());
+                            "for the seventh argument of " +
+                            " reorder:akslack() function. Required DOUBLE, "
+                            + "but found "
+                            +
+                            attributeExpressionExecutors[6].getReturnType());
                 }
                 if (attributeExpressionExecutors[7].getReturnType() == Attribute.Type.DOUBLE) {
                     confidenceLevel = (Double) ((ConstantExpressionExecutor)
                             attributeExpressionExecutors[7]).getValue();
-                    attributes.add(new Attribute("beta6", Attribute.Type.DOUBLE));
+                    attributes.add(new Attribute("beta7", Attribute.Type.DOUBLE));
                 } else {
                     throw new SiddhiAppCreationException("Invalid parameter type found for " +
-                                                                 "the eighth argument of " +
-                                                                 " reorder:akslack() function. Required DOUBLE, "
-                                                                 + "but found "
-                                                                 + attributeExpressionExecutors[7].getReturnType());
+                            "the eighth argument of " +
+                            " reorder:akslack() function. Required DOUBLE, "
+                            + "but found "
+                            + attributeExpressionExecutors[7].getReturnType());
                 }
             } else {
                 throw new SiddhiAppCreationException("errorThreshold and " +
-                                                             "confidenceLevel must be constants");
+                        "confidenceLevel must be constants");
             }
         }
 
