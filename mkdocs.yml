@@ -6,7 +6,7 @@ extra_css:
 - stylesheets/extra.css
 extra_javascript:
 - javascripts/extra.js
-repo_name: siddhi-execution-approximate
+repo_name: siddhi-execution-reorder
 repo_url: https://github.com/wso2-extensions/siddhi-execution-reorder
 copyright: Copyright &copy; 2011 - 2018 WSO2
 theme:
@@ -50,4 +50,3 @@ pages:
   - 4.0.6: api/4.0.6.md
   - latest: api/latest.md
 - License: license.md
-theme: material
