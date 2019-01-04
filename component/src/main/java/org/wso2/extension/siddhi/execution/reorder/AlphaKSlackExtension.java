@@ -266,10 +266,23 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                     long timestamp = (Long) timestampExecutor.execute(event);
                     timestampList.add(timestamp);
                     double correlationField;
-                    if (correlationFieldExecutor.getReturnType() == Attribute.Type.INT) {
-                        correlationField = (Integer) correlationFieldExecutor.execute(event);
-                    } else {
-                        correlationField = (Double) correlationFieldExecutor.execute(event);
+                    switch (attributeExpressionExecutors[1].getReturnType()) {
+                        case INT:
+                            correlationField = (Integer) correlationFieldExecutor.execute(event);
+                            break;
+                        case LONG:
+                            correlationField = (Long) correlationFieldExecutor.execute(event);
+                            break;
+                        case FLOAT:
+                            correlationField = (Float) correlationFieldExecutor.execute(event);
+                            break;
+                        case DOUBLE:
+                            correlationField = (Double) correlationFieldExecutor.execute(event);
+                            break;
+                        default:
+                            //will not occur at all
+                            correlationField = 0.0;
+
                     }
                     dataItemList.add(correlationField);
                     if (discardFlag) {
