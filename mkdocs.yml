@@ -9,6 +9,13 @@ extra_javascript:
 repo_name: siddhi-execution-reorder
 repo_url: https://github.com/wso2-extensions/siddhi-execution-reorder
 copyright: Copyright &copy; 2011 - 2018 WSO2
+theme:
+  name: material
+  logo: images/siddhi-logo-w.svg
+  favicon: images/favicon.ico
+  palette:
+    primary: teal
+    accent: teal
 google_analytics:
 - UA-103065-28
 - auto
@@ -29,19 +36,6 @@ pages:
   - 4.0.22: api/4.0.22.md
   - 4.0.21: api/4.0.21.md
   - 4.0.20: api/4.0.20.md
-  - 4.0.19: api/4.0.19.md
-  - 4.0.18: api/4.0.18.md
-  - 4.0.17: api/4.0.17.md
-  - 4.0.16: api/4.0.16.md
-  - 4.0.15: api/4.0.15.md
-  - 4.0.14: api/4.0.14.md
-  - 4.0.13: api/4.0.13.md
-  - 4.0.12: api/4.0.12.md
-  - 4.0.11: api/4.0.11.md
-  - 4.0.10: api/4.0.10.md
-  - 4.0.9: api/4.0.9.md
-  - 4.0.8: api/4.0.8.md
-  - 4.0.7: api/4.0.7.md
   - 4.0.6: api/4.0.6.md
   - latest: api/latest.md
 - License: license.md

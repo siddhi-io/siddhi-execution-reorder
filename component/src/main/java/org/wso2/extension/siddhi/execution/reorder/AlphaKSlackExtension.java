@@ -72,7 +72,7 @@ import java.util.concurrent.locks.ReentrantLock;
                                 "by the adaptive operation of the Alpha K-Slack extension. This field is used by the " +
                                 "Alpha K-Slack to calculate the runtime window coverage threshold which is an upper " +
                                 "limit set for the unsuccessfully handled late arrivals",
-                        type = {DataType.DOUBLE}),
+                        type = {DataType.INT, DataType.FLOAT, DataType.LONG, DataType.DOUBLE}),
                 @Parameter(name = "batch.size",
                         description = "The parameter batch.size denotes the number of events that should be " +
                                 "considered in the calculation of an alpha value. batch.size should be a value " +
@@ -197,6 +197,13 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
     private double confidenceLevel = 0.95;
     private double alpha = 1;
     private SiddhiAppContext siddhiAppContext;
+    private WindowCoverage windowCoverage;
+    private double criticalValue;
+    private long l = 0;
+    private long windowSize = 10000000000L;
+
+    public AlphaKSlackExtension() {
+    }
 
     @Override
     public void start() {
@@ -251,12 +258,6 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
         ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(false);
         try {
             lock.lock();
-            NormalDistribution actualDistribution = new NormalDistribution();
-
-            double criticalValue = Math.abs(actualDistribution.inverseCumulativeProbability
-                    ((1 - confidenceLevel) / 2));
-            WindowCoverage obj = new WindowCoverage(errorThreshold);
-
             while (streamEventChunk.hasNext()) {
                 StreamEvent event = streamEventChunk.next();
 
@@ -264,7 +265,12 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                     streamEventChunk.remove();
                     long timestamp = (Long) timestampExecutor.execute(event);
                     timestampList.add(timestamp);
-                    double correlationField = (Double) correlationFieldExecutor.execute(event);
+                    double correlationField;
+                    if (correlationFieldExecutor.getReturnType() == Attribute.Type.INT) {
+                        correlationField = (Integer) correlationFieldExecutor.execute(event);
+                    } else {
+                        correlationField = (Double) correlationFieldExecutor.execute(event);
+                    }
                     dataItemList.add(correlationField);
                     if (discardFlag) {
                         if (timestamp < lastSentTimestamp) {
@@ -278,22 +284,29 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                         scheduler.notifyAt(lastScheduledTimestamp);
                     }
 
-                    List<StreamEvent> eventList = primaryTreeMap.get(timestamp);
-                    if (eventList == null) {
-                        eventList = new ArrayList<StreamEvent>();
-                        primaryTreeMap.put(timestamp, eventList);
-                    }
+                    List<StreamEvent> eventList = primaryTreeMap.computeIfAbsent(timestamp, k1 -> new ArrayList<>());
                     eventList.add(event);
                     counter += 1;
                     if (counter > batchSize) {
-                        long adjustedBatchsize = Math.round(batchSize * 0.75);
-                        alpha = calculateAlpha(obj.calculateWindowCoverageThreshold(criticalValue,
-                                dataItemList),
-                                obj.calculateRuntimeWindowCoverage(timestampList,
-                                        adjustedBatchsize));
+                        if (l == 0) {
+                            alpha = calculateAlpha(windowCoverage.calculateWindowCoverageThreshold(criticalValue,
+                                    dataItemList), 1);
+                            l = Math.round(alpha * k);
+                            if (l > k) {
+                                l = k;
+                            }
+                        } else {
+                            alpha = calculateAlpha(windowCoverage.calculateWindowCoverageThreshold(criticalValue,
+                                    dataItemList),
+                                    windowCoverage.calculateRuntimeWindowCoverage(timestamp, timestampList,
+                                            l, windowSize));
+                            l = Math.round(alpha * k);
+                            if (l > k) {
+                                l = k;
+                            }
+                        }
                         counter = 0;
-                        timestampList = new ArrayList<Long>();
-                        dataItemList = new ArrayList<Double>();
+                        dataItemList.clear();
                     }
                     if (timestamp > largestTimestamp) {
                         largestTimestamp = timestamp;
@@ -317,10 +330,10 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                                 list.addAll(entry.getValue());
                             } else {
                                 secondaryTreeMap.put(entry.getKey(),
-                                        new ArrayList<StreamEvent>(entry.getValue()));
+                                        new ArrayList<>(entry.getValue()));
                             }
                         }
-                        primaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
+                        primaryTreeMap.clear();
                         entryIterator = secondaryTreeMap.entrySet().iterator();
                         while (entryIterator.hasNext()) {
                             Map.Entry<Long, List<StreamEvent>> entry = entryIterator.next();
@@ -332,6 +345,8 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                                 for (StreamEvent aTimeEventList : timeEventList) {
                                     complexEventChunk.add(aTimeEventList);
                                 }
+                            } else {
+                                break;
                             }
                         }
                     }
@@ -415,18 +430,21 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                         attributeExpressionExecutors[0].getReturnType());
             }
 
-            if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.DOUBLE) {
-                correlationFieldExecutor = attributeExpressionExecutors[1];
-                attributes.add(new Attribute("beta1", Attribute.Type.DOUBLE));
-            } else {
-                throw new SiddhiAppCreationException("Invalid parameter type found for " +
-                        "the second argument of " +
-                        " reorder:akslack() function. Required DOUBLE, but "
-                        + "found "
-                        +
-                        attributeExpressionExecutors[1].getReturnType());
+            switch (attributeExpressionExecutors[1].getReturnType()) {
+                case INT:
+                case LONG:
+                case FLOAT:
+                case DOUBLE:
+                    correlationFieldExecutor = attributeExpressionExecutors[1];
+                    attributes.add(new Attribute("beta1", Attribute.Type.DOUBLE));
+                    break;
+                case BOOL:
+                case OBJECT:
+                case STRING:
+                    throw new SiddhiAppCreationException("Invalid parameter type found for " +
+                            "the second argument of reorder:akslack() function. Required INT, " +
+                            "FLOAT, DOUBLE, or LONG but found " + attributeExpressionExecutors[1].getReturnType());
             }
-
         }
         if (attributeExpressionExecutors.length >= 3) {
             if (attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
@@ -535,7 +553,10 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
                         "confidenceLevel must be constants");
             }
         }
-
+        NormalDistribution actualDistribution = new NormalDistribution();
+        criticalValue = Math.abs(actualDistribution.inverseCumulativeProbability
+                ((1 - confidenceLevel) / 2));
+        windowCoverage = new WindowCoverage(errorThreshold);
         primaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
         secondaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
 

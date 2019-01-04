@@ -257,7 +257,7 @@ public class AlphaKSlackExtensionTestCase {
 
     }
 
-    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    @Test
     public void testcase4() throws InterruptedException {
         log.info("Alpha K-Slack Extension Testcase invalid type second argument");
 
@@ -265,7 +265,7 @@ public class AlphaKSlackExtensionTestCase {
         siddhiManager.setExtension("reorder:akslack", AlphaKSlackExtension.class);
 
         String inStreamDefinition = "define stream inputStream (eventtt long,data int);";
-        String query = ("@info(name = 'query1') from inputStream#reorder:akslack(eventtt,data, 20l) select  "
+        String query = ("@info(name = 'query1') from inputStream#reorder:akslack(eventtt, data, 20l) select  "
                 + "eventtt, data " + "insert into outputStream;");
         siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
 
@@ -279,7 +279,7 @@ public class AlphaKSlackExtensionTestCase {
         siddhiManager.setExtension("reorder:akslack", AlphaKSlackExtension.class);
 
         String inStreamDefinition = "define stream inputStream (eventtt long,data double,data2 long);";
-        String query = ("@info(name = 'query1') from inputStream#reorder:akslack(eventtt,data,data2 ) select  "
+        String query = ("@info(name = 'query1') from inputStream#reorder:akslack(eventtt, data, data2 ) select  "
                 + "eventtt, data " + "insert into outputStream;");
 
         siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
