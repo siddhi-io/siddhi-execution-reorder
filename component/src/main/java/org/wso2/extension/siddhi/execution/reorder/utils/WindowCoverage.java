@@ -1,5 +1,7 @@
 package org.wso2.extension.siddhi.execution.reorder.utils;
 
+import org.apache.log4j.Logger;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.List;
  * This class calculate the window coverage
  */
 public class WindowCoverage {
+    private static final Logger log = Logger.getLogger(WindowCoverage.class);
     private double errorThreshold;
 
     public WindowCoverage(double errorThreshold) {
@@ -25,15 +28,14 @@ public class WindowCoverage {
      * Calculate Window Coverage Threshold
      *
      * @param criticalValue critical value for algorithm
-     * @param listOfData List of data to calculate window coverage
      * @return windowCoverageThreshold
      */
 
     public double calculateWindowCoverageThreshold(double criticalValue, List<Double> listOfData) {
         double mean = calculateMean(listOfData);
-        double variance = calculateVariance(listOfData);
+        double variance = calculateVariance(listOfData, mean);
         double temp1 = Math.sqrt((Math.pow(mean, 2) + Math.pow(variance, 2)) /
-                                         (listOfData.size() * Math.pow(mean, 2)));
+                (listOfData.size() * Math.pow(mean, 2)));
         double temp2 = Math.pow(criticalValue, 2) * Math.pow(temp1, 2);
         double a1, b1, c1, b2, c2;
         double windowCoverageThreshold;
@@ -78,10 +80,10 @@ public class WindowCoverage {
         return sum / listOfData.size();
     }
 
-    private double calculateVariance(List<Double> listOfData) {
+    private double calculateVariance(List<Double> listOfData, double meanValue) {
         double squaredSum = 0;
         for (Double aListOfData : listOfData) {
-            squaredSum += Math.pow((calculateMean(listOfData) - aListOfData), 2);
+            squaredSum += Math.pow((meanValue - aListOfData), 2);
         }
         return squaredSum / listOfData.size();
     }
@@ -90,11 +92,12 @@ public class WindowCoverage {
      * Calculate Window Coverage
      *
      * @param eventTimestamps Timestamp of events in window
-     * @param windowSize Size of window
+     * @param windowSize      Size of window
      * @return runtimeWindowCoverage
      */
 
     public double calculateRuntimeWindowCoverage(List<Long> eventTimestamps, long windowSize) {
+//        long start = System.currentTimeMillis();
         double runtimeWindowCoverage = -1;
         int numerator = 0;
         int denominator = 0;
@@ -126,6 +129,43 @@ public class WindowCoverage {
             }
             runtimeWindowCoverage = numerator * 1.0 / denominator;
         }
+//        log.info("Runtime window coverage: " + (System.currentTimeMillis() - start));
         return runtimeWindowCoverage;
+    }
+
+    public double calculateRuntimeWindowCoverage(long currentTimestamp, List<Long> timestamps,
+                                                 long l, long windowSize) {
+        long windowHigh = currentTimestamp - l;
+        long windowLow = currentTimestamp - l - windowSize;
+        int coveredInWindow = 0;
+        int totalEventsForWindow = 0;
+        boolean lowWindowTimeMet = false;
+        boolean highWindowTimeMet = false;
+        Iterator<Long> timestampIterator = timestamps.iterator();
+        while (timestampIterator.hasNext()) {
+            long timestamp = timestampIterator.next();
+            if (!lowWindowTimeMet && windowLow <= timestamp) {
+                lowWindowTimeMet = true;
+            }
+            if (!highWindowTimeMet && windowHigh <= timestamp) {
+                highWindowTimeMet = true;
+            }
+            if (lowWindowTimeMet) {
+                if (windowLow <= timestamp && windowHigh >= timestamp) {
+                    if (!highWindowTimeMet) {
+                        coveredInWindow++;
+                    }
+                    totalEventsForWindow++;
+                }
+            }
+            if (timestamp <= windowLow) {
+                timestampIterator.remove();
+            }
+        }
+        if (totalEventsForWindow != 0) {
+            return (coveredInWindow / (double) totalEventsForWindow);
+        } else {
+            return 1.0;
+        }
     }
 }

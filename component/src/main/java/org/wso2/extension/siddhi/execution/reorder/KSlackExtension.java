@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c)  2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -106,6 +106,8 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
     private Scheduler scheduler;
     private long lastScheduledTimestamp = -1;
     private ReentrantLock lock = new ReentrantLock();
+//    private int totalCount;
+//    private int printcount;
 
     @Override
     public void start() {
@@ -122,7 +124,8 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
         return new HashMap<String, Object>();
     }
 
-    @Override public void restoreState(Map<String, Object> map) {
+    @Override
+    public void restoreState(Map<String, Object> map) {
 
     }
 
@@ -131,11 +134,12 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                            StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater) {
         ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(false);
         try {
-        lock.lock();
+            lock.lock();
             while (streamEventChunk.hasNext()) {
                 StreamEvent event = streamEventChunk.next();
 
                 if (event.getType() != ComplexEvent.Type.TIMER) {
+//                    totalCount++;
 
                     streamEventChunk.remove();
                     //We might have the rest of the events linked to this event forming a chain.
@@ -182,21 +186,21 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                             }
                         }
                         eventTreeMap = new TreeMap<Long, ArrayList<StreamEvent>>();
+                            entryIterator = expiredEventTreeMap.entrySet().iterator();
+                            while (entryIterator.hasNext()) {
+                                Map.Entry<Long, ArrayList<StreamEvent>> entry = entryIterator.next();
+                                if (entry.getKey() + k <= greatestTimestamp) {
+                                    entryIterator.remove();
+                                    ArrayList<StreamEvent> timeEventList = entry.getValue();
+                                    lastSentTimeStamp = entry.getKey();
 
-                        entryIterator = expiredEventTreeMap.entrySet().iterator();
-                        while (entryIterator.hasNext()) {
-                            Map.Entry<Long, ArrayList<StreamEvent>> entry = entryIterator.next();
-
-                            if (entry.getKey() + k <= greatestTimestamp) {
-                                entryIterator.remove();
-                                ArrayList<StreamEvent> timeEventList = entry.getValue();
-                                lastSentTimeStamp = entry.getKey();
-
-                                for (StreamEvent aTimeEventList : timeEventList) {
-                                    complexEventChunk.add(aTimeEventList);
+                                    for (StreamEvent aTimeEventList : timeEventList) {
+                                        complexEventChunk.add(aTimeEventList);
+                                    }
+                                } else {
+                                    break;
                                 }
                             }
-                        }
                     }
                 } else {
                     if (expiredEventTreeMap.size() > 0) {
@@ -217,14 +221,15 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
         } finally {
             lock.unlock();
         }
-        nextProcessor.process(complexEventChunk);
+        if (nextProcessor != null) {
+            nextProcessor.process(complexEventChunk);
+        }
     }
 
     @Override
     protected List<Attribute> init(AbstractDefinition abstractDefinition, ExpressionExecutor[] expressionExecutors,
                                    ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-
         if (attributeExpressionLength > 4) {
             throw new SiddhiAppCreationException("Maximum four input parameters can be specified for KSlack. " +
                     " Timestamp field (long), k-slack buffer expiration time-out window (long), Max_K size (long), "

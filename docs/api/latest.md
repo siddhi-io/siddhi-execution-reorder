@@ -1,4 +1,4 @@
-# API Docs - v4.0.23
+# API Docs - v4.0.24-SNAPSHOT
 
 ## Reorder
 
@@ -8,7 +8,7 @@
 
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
 ```
-reorder:akslack(<LONG> timestamp, <DOUBLE> correlation.field, <LONG> batch.size, <LONG> timer.timeout, <LONG> max.k, <BOOL> discard.flag, <DOUBLE> error.threshold, <DOUBLE> confidence.level)
+reorder:akslack(<LONG> timestamp, <INT|FLOAT|LONG|DOUBLE> correlation.field, <LONG> batch.size, <LONG> timer.timeout, <LONG> max.k, <BOOL> discard.flag, <DOUBLE> error.threshold, <DOUBLE> confidence.level)
 ```
 
 <span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -33,7 +33,7 @@ reorder:akslack(<LONG> timestamp, <DOUBLE> correlation.field, <LONG> batch.size,
         <td style="vertical-align: top">correlation.field</td>
         <td style="vertical-align: top; word-wrap: break-word">Corresponds to the data field of which the accuracy directly gets affected by the adaptive operation of the Alpha K-Slack extension. This field is used by the Alpha K-Slack to calculate the runtime window coverage threshold which is an upper limit set for the unsuccessfully handled late arrivals</td>
         <td style="vertical-align: top"></td>
-        <td style="vertical-align: top">DOUBLE</td>
+        <td style="vertical-align: top">INT<br>FLOAT<br>LONG<br>DOUBLE</td>
         <td style="vertical-align: top">No</td>
         <td style="vertical-align: top">No</td>
     </tr>
