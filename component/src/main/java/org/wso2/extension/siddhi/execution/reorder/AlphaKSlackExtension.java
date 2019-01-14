@@ -60,57 +60,61 @@ import java.util.concurrent.locks.ReentrantLock;
 @Extension(
         name = "akslack",
         namespace = "reorder",
-        description = "This stream processor extension performs reordering of an out-of-order event stream.\n" +
-                " It implements the AQ-K-Slack based out-of-order handling algorithm (originally described in \n" +
-                "http://dl.acm.org/citation.cfm?doid=2675743.2771828)",
+        description = "This stream processor extension performs reordering of an event stream which " +
+                "is out of order.\n" +
+                " It implements the AQ-K-Slack based out-of-order handling algorithm which is originally " +
+                "described in \n" +
+                "'http://dl.acm.org/citation.cfm?doid=2675743.2771828'.",
         parameters = {
                 @Parameter(name = "timestamp",
-                        description = "Attribute used for ordering the events",
+                        description = "The attribute used for ordering the events.",
                         type = {DataType.LONG}),
                 @Parameter(name = "correlation.field",
-                        description = "Corresponds to the data field of which the accuracy directly gets affected " +
-                                "by the adaptive operation of the Alpha K-Slack extension. This field is used by the " +
-                                "Alpha K-Slack to calculate the runtime window coverage threshold which is an upper " +
-                                "limit set for the unsuccessfully handled late arrivals",
+                        description = "This corresponds to the data field of which the accuracy directly gets " +
+                                "affected, " +
+                                "by the adaptive operation of the Alpha K-Slack extension. This field is used to" +
+                                " calculate the runtime window coverage threshold which is an upper " +
+                                "limit set for the unsuccessfully handled late arrivals.",
                         type = {DataType.INT, DataType.FLOAT, DataType.LONG, DataType.DOUBLE}),
                 @Parameter(name = "batch.size",
-                        description = "The parameter batch.size denotes the number of events that should be " +
-                                "considered in the calculation of an alpha value. batch.size should be a value " +
-                                "which should be greater than or equals to 15",
+                        description = "The parameter 'batch.size' denotes the number of events that should be " +
+                                "considered in the calculation of an alpha value. It should be a value " +
+                                "which should be greater than or equal to fifteen.",
                         defaultValue = "10,000",
                         type = {DataType.LONG},
                         optional = true),
                 @Parameter(name = "timer.timeout",
-                        description = "Corresponds to a fixed time-out value in milliseconds, which is set at " +
+                        description = "This corresponds to a fixed time out value in milliseconds, which is set at " +
                                 "the beginning of the process. " +
-                                "Once the time-out value expires, the extension drains all the events that are " +
-                                "buffered within the reorder extension to outside. The time out has been implemented " +
+                                "Once the time out value expires, the extension drains out all the events that are " +
+                                "buffered within the reorder extension. The time out has been implemented " +
                                 "internally using a timer. The events buffered within the extension are released " +
                                 "each time the timer ticks.",
                         defaultValue = "-1 (timeout is infinite)",
                         type = {DataType.LONG},
                         optional = true),
                 @Parameter(name = "max.k",
-                        description = "The maximum threshold value for K parameter in the Alpha K-Slack algorithm",
+                        description = "This is the maximum threshold value for 'K' parameter in the " +
+                                "Alpha K-Slack algorithm.",
                         defaultValue = "9,223,372,036,854,775,807 (The maximum Long value)",
                         type = {DataType.LONG},
                         optional = true),
                 @Parameter(name = "discard.flag",
-                        description = "Indicates whether the out-of-order events which appear after the expiration " +
-                                "of the Alpha K-slack window should get discarded or not. When this value is set " +
-                                "to true, the events would get discarded",
+                        description = "This indicates whether the out-of-order events which appear after the " +
+                                "expiration of the Alpha K-slack window should be discarded or not. When this " +
+                                "value is set to 'true', the events are discarded.",
                         defaultValue = "false",
                         type = {DataType.BOOL},
                         optional = true),
                 @Parameter(name = "error.threshold",
-                        description = "Error threshold to be applied in Alpha K-Slack algorithm. This parameter must " +
-                                "be defined simultaneously with confidenceLevel",
+                        description = "The error threshold to be applied in Alpha K-Slack algorithm. " +
+                                "This parameter must be defined simultaneously with 'confidenceLevel'.",
                         defaultValue = "0.03 (3%)",
                         type = {DataType.DOUBLE},
                         optional = true),
                 @Parameter(name = "confidence.level",
-                        description = "Confidence level to be applied in Alpha K-Slack algorithm. This parameter " +
-                                "must be defined simultaneously with errorThreshold",
+                        description = "The confidence level to be applied in Alpha K-Slack algorithm. This parameter " +
+                                "must be defined simultaneously with 'errorThreshold'.",
                         defaultValue = "0.95 (95%)",
                         type = {DataType.DOUBLE},
                         optional = true)
@@ -118,56 +122,56 @@ import java.util.concurrent.locks.ReentrantLock;
         returnAttributes = {
                 @ReturnAttribute(
                         name = "beta0",
-                        description = "Timestamp based on which the reordering is performed",
+                        description = "The timestamp based on which the reordering is performed.",
                         type = {DataType.LONG}
                 ),
                 @ReturnAttribute(
                         name = "beta1",
-                        description = "An upper limit value assigned for the unsuccessfully handled late arrivals",
+                        description = "An upper limit value assigned for the unsuccessfully handled late arrivals.",
                         type = {DataType.DOUBLE}
                 ),
                 @ReturnAttribute(
                         name = "beta2",
                         description = "The number of events that should be considered in the calculation of an alpha " +
-                                "value",
+                                "value.",
                         type = {DataType.LONG}
                 ),
                 @ReturnAttribute(
                         name = "beta3",
-                        description = "Fixed time-out value (in milliseconds) assigned for flushing all the events " +
-                                "buffered inside the extension.",
+                        description = "The fixed time-out value in milliseconds assigned for flushing all the " +
+                                "events buffered inside the extension.",
                         type = {DataType.LONG}
                 ),
                 @ReturnAttribute(
                         name = "beta4",
-                        description = "Maximum threshold value assigned for K parameter.",
+                        description = "The maximum threshold value assigned for 'K' parameter.",
                         type = {DataType.LONG}
                 ),
                 @ReturnAttribute(
                         name = "beta5",
-                        description = "Flag set to indicate whether out-of-order events which arrive after buffer " +
-                                "eviction to be discarded or not",
+                        description = "The flag set to indicate whether the out-of-order events which arrive " +
+                                "after buffer eviction are to be discarded or not.",
                         type = {DataType.BOOL}
                 ),
                 @ReturnAttribute(
                         name = "beta6",
-                        description = "Error threshold value set for Alpha K-Slack algorithm",
+                        description = "The error threshold value set for Alpha K-Slack algorithm.",
                         type = {DataType.DOUBLE}
                 ),
                 @ReturnAttribute(
                         name = "beta7",
-                        description = "Confidence level set for the Alpha K-Slack algorithm",
+                        description = "The confidence level set for the Alpha K-Slack algorithm.",
                         type = {DataType.DOUBLE}
                 )
         },
         examples = @Example(
-                syntax = "define stream inputStream (eventtt long,data double);\n" +
+                syntax = "define stream InputStream (eventtt long,data double);\n" +
                         "@info(name = 'query1')\n" +
-                        "from inputStream#reorder:akslack(eventtt, data, 20)\n" +
-                        "select eventtt, data\n" +
-                        "insert into outputStream;",
+                        "from InputStream#reorder:akslack(eventtt, data, 20)\n" +
+                        "select event, data\n" +
+                        "insert into OutputStream;",
                 description = "This query performs reordering based on the 'eventtt' attribute values. In this " +
-                        "example, 20 represents the batch size")
+                        "example, 20 represents the batch size.")
 )
 public class AlphaKSlackExtension extends StreamProcessor implements SchedulingProcessor {
     private Long k = 0L; //In the beginning the K is zero.

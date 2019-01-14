@@ -55,41 +55,41 @@ import java.util.concurrent.locks.ReentrantLock;
         name = "kslack",
         namespace = "reorder",
         description = "This stream processor extension performs reordering of an out-of-order event stream.\n" +
-                " It implements the K-Slack based out-of-order handling algorithm (originally described in \n" +
-                "https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf)",
+                " It implements the K-Slack based out-of-order handling algorithm which is originally described in \n" +
+                "'https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf'.)",
         parameters = {
                 @Parameter(name = "timestamp",
-                        description = "Attribute used for ordering the events",
+                        description = "This is the attribute used for ordering the events.",
                         type = {DataType.LONG}),
                 @Parameter(name = "timer.timeout",
-                        description = "Corresponds to a fixed time-out value in milliseconds, which is set at " +
+                        description = "This corresponds to a fixed time-out value in milliseconds, which is set at " +
                                 "the beginning of the process. " +
-                                "Once the time-out value expires, the extension drains all the events that are " +
-                                "buffered within the reorder extension to outside. The time out has been implemented " +
+                                "Once the time-out value expires, the extension drains out all the events that are " +
+                                "buffered within the reorder extension. The time-out has been implemented " +
                                 "internally using a timer. The events buffered within the extension are released " +
                                 "each time the timer ticks.",
                         defaultValue = "-1 (timeout is infinite)",
                         type = {DataType.LONG},
                         optional = true),
                 @Parameter(name = "max.k",
-                        description = "The maximum threshold value for K parameter in the K-Slack algorithm",
+                        description = "The maximum threshold value for 'K' parameter in the K-Slack algorithm.",
                         defaultValue = "9,223,372,036,854,775,807 (The maximum Long value)",
                         type = {DataType.LONG},
                         optional = true),
                 @Parameter(name = "discard.flag",
-                        description = "Indicates whether the out-of-order events which appear after the expiration " +
-                                "of the K-slack window should get discarded or not. When this value is set " +
-                                "to true, the events would get discarded",
+                        description = "This indicates whether the out-of-order events which appear " +
+                                "after the expiration of the K-slack window should be discarded or not. " +
+                                "When this value is set to 'true', the events would get discarded.",
                         defaultValue = "false",
                         type = {DataType.BOOL},
                         optional = true)
         },
         examples = @Example(
-                syntax = "define stream inputStream (eventtt long, price long, volume long);\n" +
+                syntax = "define stream InputStream (eventtt long, price long, volume long);\n" +
                         "@info(name = 'query1')\n" +
-                        "from inputStream#reorder:kslack(eventtt, 1000)\n" +
+                        "from InputStream#reorder:kslack(eventtt, 1000)\n" +
                         "select eventtt, price, volume\n" +
-                        "insert into outputStream;",
+                        "insert into OutputStream;",
                 description = "This query performs reordering based on the 'eventtt' attribute values. In this " +
                         "example, the timeout value is set to 1000 milliseconds")
 )
