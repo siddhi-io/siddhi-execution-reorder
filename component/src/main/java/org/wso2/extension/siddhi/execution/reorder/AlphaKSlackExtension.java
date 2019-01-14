@@ -168,7 +168,7 @@ import java.util.concurrent.locks.ReentrantLock;
                 syntax = "define stream InputStream (eventtt long,data double);\n" +
                         "@info(name = 'query1')\n" +
                         "from InputStream#reorder:akslack(eventtt, data, 20)\n" +
-                        "select event, data\n" +
+                        "select eventtt, data\n" +
                         "insert into OutputStream;",
                 description = "This query performs reordering based on the 'eventtt' attribute values. In this " +
                         "example, 20 represents the batch size.")
