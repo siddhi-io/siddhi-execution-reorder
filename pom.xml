@@ -27,7 +27,7 @@
 
     <groupId>org.wso2.extension.siddhi.execution.reorder</groupId>
     <artifactId>siddhi-execution-reorder-parent</artifactId>
-    <version>4.2.2-SNAPSHOT</version>
+    <version>4.2.2</version>
     <packaging>pom</packaging>
     <name>Siddhi Execution Reorder Extension Parent</name>
     <url>http://wso2.org</url>
@@ -56,7 +56,7 @@
         <url>https://github.com/wso2-extensions/siddhi-execution-reorder.git</url>
         <developerConnection>scm:git:https://github.com/wso2-extensions/siddhi-execution-reorder.git
         </developerConnection>
-        <tag>HEAD</tag>
+        <tag>v4.2.2</tag>
     </scm>
 
     <dependencyManagement>
