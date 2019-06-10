@@ -16,30 +16,35 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.execution.reorder;
+package io.siddhi.extension.execution.reorder;
 
-import org.wso2.siddhi.annotation.Example;
-import org.wso2.siddhi.annotation.Extension;
-import org.wso2.siddhi.annotation.Parameter;
-import org.wso2.siddhi.annotation.util.DataType;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
-import org.wso2.siddhi.core.event.ComplexEvent;
-import org.wso2.siddhi.core.event.ComplexEventChunk;
-import org.wso2.siddhi.core.event.stream.StreamEvent;
-import org.wso2.siddhi.core.event.stream.StreamEventCloner;
-import org.wso2.siddhi.core.event.stream.populater.ComplexEventPopulater;
-import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
-import org.wso2.siddhi.core.executor.ExpressionExecutor;
-import org.wso2.siddhi.core.query.processor.Processor;
-import org.wso2.siddhi.core.query.processor.SchedulingProcessor;
-import org.wso2.siddhi.core.query.processor.stream.StreamProcessor;
-import org.wso2.siddhi.core.util.Scheduler;
-import org.wso2.siddhi.core.util.config.ConfigReader;
-import org.wso2.siddhi.query.api.definition.AbstractDefinition;
-import org.wso2.siddhi.query.api.definition.Attribute;
+import io.siddhi.annotation.Example;
+import io.siddhi.annotation.Extension;
+import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.config.SiddhiQueryContext;
+import io.siddhi.core.event.ComplexEvent;
+import io.siddhi.core.event.ComplexEventChunk;
+import io.siddhi.core.event.stream.MetaStreamEvent;
+import io.siddhi.core.event.stream.StreamEvent;
+import io.siddhi.core.event.stream.StreamEventCloner;
+import io.siddhi.core.event.stream.holder.StreamEventClonerHolder;
+import io.siddhi.core.event.stream.populater.ComplexEventPopulater;
+import io.siddhi.core.exception.SiddhiAppCreationException;
+import io.siddhi.core.executor.ExpressionExecutor;
+import io.siddhi.core.query.processor.ProcessingMode;
+import io.siddhi.core.query.processor.Processor;
+import io.siddhi.core.query.processor.SchedulingProcessor;
+import io.siddhi.core.query.processor.stream.StreamProcessor;
+import io.siddhi.core.util.Scheduler;
+import io.siddhi.core.util.config.ConfigReader;
+import io.siddhi.core.util.snapshot.state.State;
+import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.query.api.definition.AbstractDefinition;
+import io.siddhi.query.api.definition.Attribute;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -93,7 +98,7 @@ import java.util.concurrent.locks.ReentrantLock;
                 description = "This query performs reordering based on the 'eventtt' attribute values. In this " +
                         "example, the timeout value is set to 1000 milliseconds")
 )
-public class KSlackExtension extends StreamProcessor implements SchedulingProcessor {
+public class KSlackExtension extends StreamProcessor<State> implements SchedulingProcessor {
     private long k = 0; //In the beginning the K is zero.
     private long greatestTimestamp = 0; //Used to track the greatest timestamp of tuples in the stream history.
     private TreeMap<Long, ArrayList<StreamEvent>> eventTreeMap;
@@ -106,12 +111,16 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
     private Scheduler scheduler;
     private long lastScheduledTimestamp = -1;
     private ReentrantLock lock = new ReentrantLock();
-//    private int totalCount;
-//    private int printcount;
+
+    private List<Attribute> attributes = new ArrayList<>();
+    private SiddhiAppContext siddhiAppContext;
 
     @Override
     public void start() {
-        //Do nothing
+        if (lastScheduledTimestamp < 0) {
+            lastScheduledTimestamp = this.siddhiAppContext.getTimestampGenerator().currentTime() + timerDuration;
+            scheduler.notifyAt(lastScheduledTimestamp);
+        }
     }
 
     @Override
@@ -120,18 +129,9 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
     }
 
     @Override
-    public Map<String, Object> currentState() {
-        return new HashMap<String, Object>();
-    }
-
-    @Override
-    public void restoreState(Map<String, Object> map) {
-
-    }
-
-    @Override
     protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-                           StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater) {
+                           StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater,
+                           State state) {
         ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(false);
         try {
             lock.lock();
@@ -139,7 +139,6 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
                 StreamEvent event = streamEventChunk.next();
 
                 if (event.getType() != ComplexEvent.Type.TIMER) {
-//                    totalCount++;
 
                     streamEventChunk.remove();
                     //We might have the rest of the events linked to this event forming a chain.
@@ -227,9 +226,12 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
     }
 
     @Override
-    protected List<Attribute> init(AbstractDefinition abstractDefinition, ExpressionExecutor[] expressionExecutors,
-                                   ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
-        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+    protected StateFactory<State> init(MetaStreamEvent metaStreamEvent, AbstractDefinition abstractDefinition,
+                                   ExpressionExecutor[] expressionExecutors, ConfigReader configReader,
+                                   StreamEventClonerHolder streamEventClonerHolder, boolean outputExpectsExpiredEvents,
+                                   boolean findToBeExecuted, SiddhiQueryContext siddhiQueryContext) {
+        this.attributes = new ArrayList<>();
+        this.siddhiAppContext = siddhiQueryContext.getSiddhiAppContext();
         if (attributeExpressionLength > 4) {
             throw new SiddhiAppCreationException("Maximum four input parameters can be specified for KSlack. " +
                     " Timestamp field (long), k-slack buffer expiration time-out window (long), Max_K size (long), "
@@ -347,19 +349,16 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
         expiredEventTreeMap = new TreeMap<Long, ArrayList<StreamEvent>>();
 
         if (timerDuration != -1L && scheduler != null) {
-            lastScheduledTimestamp = siddhiAppContext.getTimestampGenerator().currentTime() + timerDuration;
+            lastScheduledTimestamp =  siddhiQueryContext.getSiddhiAppContext().getTimestampGenerator().currentTime() +
+                    timerDuration;
             scheduler.notifyAt(lastScheduledTimestamp);
         }
-        return attributes;
+        return null;
     }
 
     @Override
     public void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
-        if (lastScheduledTimestamp < 0) {
-            lastScheduledTimestamp = siddhiAppContext.getTimestampGenerator().currentTime() + timerDuration;
-            scheduler.notifyAt(lastScheduledTimestamp);
-        }
     }
 
     @Override
@@ -379,5 +378,15 @@ public class KSlackExtension extends StreamProcessor implements SchedulingProces
             }
         }
         nextProcessor.process(complexEventChunk);
+    }
+
+    @Override
+    public List<Attribute> getReturnAttributes() {
+        return attributes;
+    }
+
+    @Override
+    public ProcessingMode getProcessingMode() {
+        return ProcessingMode.BATCH;
     }
 }

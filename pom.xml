@@ -25,9 +25,9 @@
         <version>5</version>
     </parent>
 
-    <groupId>org.wso2.extension.siddhi.execution.reorder</groupId>
+    <groupId>io.siddhi.extension.execution.reorder</groupId>
     <artifactId>siddhi-execution-reorder-parent</artifactId>
-    <version>4.2.3-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Siddhi Execution Reorder Extension Parent</name>
     <url>http://wso2.org</url>
@@ -45,10 +45,11 @@
     </profiles>
 
     <properties>
-        <siddhi.version>4.4.8</siddhi.version>
-        <siddhi.version.range>[4.0.0,5.0.0)</siddhi.version.range>
+        <siddhi.version>5.0.0</siddhi.version>
+        <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <log4j.version>1.2.17.wso2v1</log4j.version>
         <jacoco.maven.version>0.7.9</jacoco.maven.version>
+        <mavan.findbugsplugin.exclude.file>findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
     </properties>
 
     <scm>
@@ -62,12 +63,12 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.wso2.siddhi</groupId>
+                <groupId>io.siddhi</groupId>
                 <artifactId>siddhi-core</artifactId>
                 <version>${siddhi.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.wso2.siddhi</groupId>
+                <groupId>io.siddhi</groupId>
                 <artifactId>siddhi-query-api</artifactId>
                 <version>${siddhi.version}</version>
             </dependency>
@@ -155,6 +156,7 @@
                     <threshold>Medium</threshold>
                     <xmlOutput>true</xmlOutput>
                     <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
+                    <excludeFilterFile>${mavan.findbugsplugin.exclude.file}</excludeFilterFile>
                 </configuration>
                 <executions>
                     <execution>
