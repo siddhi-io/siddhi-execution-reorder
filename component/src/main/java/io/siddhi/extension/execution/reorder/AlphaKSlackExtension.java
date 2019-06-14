@@ -286,7 +286,7 @@ public class AlphaKSlackExtension extends StreamProcessor<AlphaKSlackExtension.A
                         if (state.counter > batchSize) {
                             if (l == 0) {
                                 alpha = calculateAlpha(windowCoverage.calculateWindowCoverageThreshold(criticalValue,
-                                        state.dataItemList), 1);
+                                        state.dataItemList), 1, state);
                                 l = Math.round(alpha * state.k);
                                 if (l > state.k) {
                                     l = state.k;
@@ -295,7 +295,8 @@ public class AlphaKSlackExtension extends StreamProcessor<AlphaKSlackExtension.A
                                 alpha = calculateAlpha(windowCoverage.calculateWindowCoverageThreshold(criticalValue,
                                         state.dataItemList),
                                         windowCoverage.calculateRuntimeWindowCoverage(timestamp, state.timestampList,
-                                                l, windowSize));
+                                                l, windowSize),
+                                        state);
                                 l = Math.round(alpha * state.k);
                                 if (l > state.k) {
                                     l = state.k;
@@ -566,18 +567,13 @@ public class AlphaKSlackExtension extends StreamProcessor<AlphaKSlackExtension.A
         this.scheduler = scheduler;
     }
 
-    private double calculateAlpha(double windowCoverageThreshold, double runtimeWindowCoverage) {
-        AlphaKSlackState state = stateHolder.getState();
-        double alpha;
-        try {
-            double error = windowCoverageThreshold - runtimeWindowCoverage;
-            double deltaAlpha = (state.kp * error) + (state.kd * (error - state.previousError));
-            alpha = Math.abs(state.previousAlpha + deltaAlpha);
-            state.previousError = error;
-            state.previousAlpha = alpha;
-        } finally {
-            stateHolder.returnState(state);
-        }
+    private double calculateAlpha(double windowCoverageThreshold, double runtimeWindowCoverage,
+                                  AlphaKSlackState state) {
+        double error = windowCoverageThreshold - runtimeWindowCoverage;
+        double deltaAlpha = (state.kp * error) + (state.kd * (error - state.previousError));
+        double alpha = Math.abs(state.previousAlpha + deltaAlpha);
+        state.previousError = error;
+        state.previousAlpha = alpha;
         return alpha;
     }
 
