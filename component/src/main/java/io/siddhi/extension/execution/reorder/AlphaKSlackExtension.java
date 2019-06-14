@@ -237,7 +237,7 @@ public class AlphaKSlackExtension extends StreamProcessor<AlphaKSlackExtension.A
                            StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater,
                            AlphaKSlackState state) {
         synchronized (state) {
-            ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(false);
+            ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(true);
             try {
                 lock.lock();
                 while (streamEventChunk.hasNext()) {

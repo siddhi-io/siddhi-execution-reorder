@@ -132,7 +132,7 @@ public class KSlackExtension extends StreamProcessor<State> implements Schedulin
     protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
                            StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater,
                            State state) {
-        ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(false);
+        ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(true);
         try {
             lock.lock();
             while (streamEventChunk.hasNext()) {
