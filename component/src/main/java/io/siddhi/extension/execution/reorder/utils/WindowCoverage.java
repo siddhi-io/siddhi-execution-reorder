@@ -1,4 +1,4 @@
-package org.wso2.extension.siddhi.execution.reorder.utils;
+package io.siddhi.extension.execution.reorder.utils;
 
 import org.apache.log4j.Logger;
 

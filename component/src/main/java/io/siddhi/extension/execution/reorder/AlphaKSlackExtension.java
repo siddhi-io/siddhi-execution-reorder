@@ -16,31 +16,37 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.execution.reorder;
+package io.siddhi.extension.execution.reorder;
 
+import io.siddhi.annotation.Example;
+import io.siddhi.annotation.Extension;
+import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ReturnAttribute;
+import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.config.SiddhiQueryContext;
+import io.siddhi.core.event.ComplexEvent;
+import io.siddhi.core.event.ComplexEventChunk;
+import io.siddhi.core.event.stream.MetaStreamEvent;
+import io.siddhi.core.event.stream.StreamEvent;
+import io.siddhi.core.event.stream.StreamEventCloner;
+import io.siddhi.core.event.stream.holder.StreamEventClonerHolder;
+import io.siddhi.core.event.stream.populater.ComplexEventPopulater;
+import io.siddhi.core.exception.SiddhiAppCreationException;
+import io.siddhi.core.executor.ConstantExpressionExecutor;
+import io.siddhi.core.executor.ExpressionExecutor;
+import io.siddhi.core.query.processor.ProcessingMode;
+import io.siddhi.core.query.processor.Processor;
+import io.siddhi.core.query.processor.SchedulingProcessor;
+import io.siddhi.core.query.processor.stream.StreamProcessor;
+import io.siddhi.core.util.Scheduler;
+import io.siddhi.core.util.config.ConfigReader;
+import io.siddhi.core.util.snapshot.state.State;
+import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.extension.execution.reorder.utils.WindowCoverage;
+import io.siddhi.query.api.definition.AbstractDefinition;
+import io.siddhi.query.api.definition.Attribute;
 import org.apache.commons.math3.distribution.NormalDistribution;
-import org.wso2.extension.siddhi.execution.reorder.utils.WindowCoverage;
-import org.wso2.siddhi.annotation.Example;
-import org.wso2.siddhi.annotation.Extension;
-import org.wso2.siddhi.annotation.Parameter;
-import org.wso2.siddhi.annotation.ReturnAttribute;
-import org.wso2.siddhi.annotation.util.DataType;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
-import org.wso2.siddhi.core.event.ComplexEvent;
-import org.wso2.siddhi.core.event.ComplexEventChunk;
-import org.wso2.siddhi.core.event.stream.StreamEvent;
-import org.wso2.siddhi.core.event.stream.StreamEventCloner;
-import org.wso2.siddhi.core.event.stream.populater.ComplexEventPopulater;
-import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
-import org.wso2.siddhi.core.executor.ConstantExpressionExecutor;
-import org.wso2.siddhi.core.executor.ExpressionExecutor;
-import org.wso2.siddhi.core.query.processor.Processor;
-import org.wso2.siddhi.core.query.processor.SchedulingProcessor;
-import org.wso2.siddhi.core.query.processor.stream.StreamProcessor;
-import org.wso2.siddhi.core.util.Scheduler;
-import org.wso2.siddhi.core.util.config.ConfigReader;
-import org.wso2.siddhi.query.api.definition.AbstractDefinition;
-import org.wso2.siddhi.query.api.definition.Attribute;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -173,28 +179,16 @@ import java.util.concurrent.locks.ReentrantLock;
                 description = "This query performs reordering based on the 'eventtt' attribute values. In this " +
                         "example, 20 represents the batch size.")
 )
-public class AlphaKSlackExtension extends StreamProcessor implements SchedulingProcessor {
-    private Long k = 0L; //In the beginning the K is zero.
-    private Long largestTimestamp = 0L; //Used to track the greatest timestamp of tuples seen so far.
-    private TreeMap<Long, List<StreamEvent>> primaryTreeMap;
-    private TreeMap<Long, List<StreamEvent>> secondaryTreeMap;
+public class AlphaKSlackExtension extends StreamProcessor<AlphaKSlackExtension.AlphaKSlackState>
+        implements SchedulingProcessor {
     private ExpressionExecutor timestampExecutor;
     private ExpressionExecutor correlationFieldExecutor;
     private Long maxK = Long.MAX_VALUE;
     private Long timerDuration = -1L;
     private boolean discardFlag = false;
-    private Long lastSentTimestamp = -1L;
     private Scheduler scheduler;
-    private Long lastScheduledTimestamp = -1L;
     private ReentrantLock lock = new ReentrantLock();
-    private double previousAlpha = 0;
-    private Integer counter = 0;
     private Long batchSize = 10000L;
-    private double previousError = 0;
-    private List<Double> dataItemList = new ArrayList<Double>();
-    private List<Long> timestampList = new ArrayList<Long>();
-    private double kp = 0.5; // Weight configuration parameters
-    private double kd = 0.8;
     private boolean flag = true;
     private boolean timerFlag = true;
     private double errorThreshold = 0.03;
@@ -205,13 +199,32 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
     private double criticalValue;
     private long l = 0;
     private long windowSize = 10000000000L;
+    private List<Attribute> attributes = new ArrayList<>();
 
     public AlphaKSlackExtension() {
     }
 
     @Override
+    public List<Attribute> getReturnAttributes() {
+        return this.attributes;
+    }
+
+    @Override
+    public ProcessingMode getProcessingMode() {
+        return ProcessingMode.BATCH;
+    }
+
+    @Override
     public void start() {
-        //Do nothing
+        AlphaKSlackState state = stateHolder.getState();
+        try {
+            if (state.lastScheduledTimestamp < 0 && flag) {
+                state.lastScheduledTimestamp = siddhiAppContext.getTimestampGenerator().currentTime() + timerDuration;
+                scheduler.notifyAt(state.lastScheduledTimestamp);
+            }
+        } finally {
+            stateHolder.returnState(state);
+        }
     }
 
     @Override
@@ -220,203 +233,169 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
     }
 
     @Override
-    public Map<String, Object> currentState() {
-        Map<String, Object> stateMap = new HashMap<String, Object>();
-        stateMap.put("k", k);
-        stateMap.put("largestTimestamp", largestTimestamp);
-        stateMap.put("lastSentTimestamp", lastSentTimestamp);
-        stateMap.put("lastScheduledTimestamp", lastScheduledTimestamp);
-        stateMap.put("previousAlpha", previousAlpha);
-        stateMap.put("counter", counter);
-        stateMap.put("previousError", previousError);
-        stateMap.put("kp", kp);
-        stateMap.put("kd", kd);
-        stateMap.put("primaryTreeMap", primaryTreeMap);
-        stateMap.put("secondaryTreeMap", secondaryTreeMap);
-        stateMap.put("dataItemList", dataItemList);
-        stateMap.put("timestampList", timestampList);
-        return stateMap;
-    }
-
-    @Override
-    public void restoreState(Map<String, Object> map) {
-        k = (Long) map.get("k");
-        largestTimestamp = (Long) map.get("largestTimestamp");
-        lastSentTimestamp = (Long) map.get("lastSentTimestamp");
-        lastScheduledTimestamp = (Long) map.get("lastScheduledTimestamp");
-        previousAlpha = (Double) map.get("previousAlpha");
-        counter = (Integer) map.get("counter");
-        previousError = (Double) map.get("previousError");
-        kp = (Double) map.get("kp");
-        kd = (Double) map.get("kd");
-        primaryTreeMap = (TreeMap) map.get("primaryTreeMap");
-        secondaryTreeMap = (TreeMap) map.get("secondaryTreeMap");
-        dataItemList = (List) map.get("dataItemList");
-        timestampList = (List) map.get("timestampList");
-    }
-
-    @Override
     protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-                           StreamEventCloner streamEventCloner,
-                           ComplexEventPopulater complexEventPopulater) {
-        ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(false);
-        try {
-            lock.lock();
-            while (streamEventChunk.hasNext()) {
-                StreamEvent event = streamEventChunk.next();
+                           StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater,
+                           AlphaKSlackState state) {
+        synchronized (state) {
+            ComplexEventChunk<StreamEvent> complexEventChunk = new ComplexEventChunk<StreamEvent>(true);
+            try {
+                lock.lock();
+                while (streamEventChunk.hasNext()) {
+                    StreamEvent event = streamEventChunk.next();
 
-                if (event.getType() != ComplexEvent.Type.TIMER) {
-                    streamEventChunk.remove();
-                    long timestamp = (Long) timestampExecutor.execute(event);
-                    timestampList.add(timestamp);
-                    double correlationField;
-                    switch (attributeExpressionExecutors[1].getReturnType()) {
-                        case INT:
-                            correlationField = (Integer) correlationFieldExecutor.execute(event);
-                            break;
-                        case LONG:
-                            correlationField = (Long) correlationFieldExecutor.execute(event);
-                            break;
-                        case FLOAT:
-                            correlationField = (Float) correlationFieldExecutor.execute(event);
-                            break;
-                        case DOUBLE:
-                            correlationField = (Double) correlationFieldExecutor.execute(event);
-                            break;
-                        default:
-                            //will not occur at all
-                            correlationField = 0.0;
-
-                    }
-                    dataItemList.add(correlationField);
-                    if (discardFlag) {
-                        if (timestamp < lastSentTimestamp) {
-                            continue;
-                        }
-                    }
-
-                    if (timerFlag) {
-                        timerFlag = false;
-                        lastScheduledTimestamp = lastScheduledTimestamp + timerDuration;
-                        scheduler.notifyAt(lastScheduledTimestamp);
-                    }
-
-                    List<StreamEvent> eventList = primaryTreeMap.computeIfAbsent(timestamp, k1 -> new ArrayList<>());
-                    eventList.add(event);
-                    counter += 1;
-                    if (counter > batchSize) {
-                        if (l == 0) {
-                            alpha = calculateAlpha(windowCoverage.calculateWindowCoverageThreshold(criticalValue,
-                                    dataItemList), 1);
-                            l = Math.round(alpha * k);
-                            if (l > k) {
-                                l = k;
-                            }
-                        } else {
-                            alpha = calculateAlpha(windowCoverage.calculateWindowCoverageThreshold(criticalValue,
-                                    dataItemList),
-                                    windowCoverage.calculateRuntimeWindowCoverage(timestamp, timestampList,
-                                            l, windowSize));
-                            l = Math.round(alpha * k);
-                            if (l > k) {
-                                l = k;
-                            }
-                        }
-                        counter = 0;
-                        dataItemList.clear();
-                    }
-                    if (timestamp > largestTimestamp) {
-                        largestTimestamp = timestamp;
-                        long minTimestamp = primaryTreeMap.firstKey();
-                        long timeDifference = largestTimestamp - minTimestamp;
-                        if (timeDifference > k) {
-                            if (timeDifference < maxK) {
-                                k = Math.round(timeDifference * alpha);
-                            } else {
-                                k = maxK;
-                            }
-                        }
-
-                        Iterator<Map.Entry<Long, List<StreamEvent>>> entryIterator =
-                                primaryTreeMap.entrySet()
-                                        .iterator();
-                        while (entryIterator.hasNext()) {
-                            Map.Entry<Long, List<StreamEvent>> entry = entryIterator.next();
-                            List<StreamEvent> list = secondaryTreeMap.get(entry.getKey());
-                            if (list != null) {
-                                list.addAll(entry.getValue());
-                            } else {
-                                secondaryTreeMap.put(entry.getKey(),
-                                        new ArrayList<>(entry.getValue()));
-                            }
-                        }
-                        primaryTreeMap.clear();
-                        entryIterator = secondaryTreeMap.entrySet().iterator();
-                        while (entryIterator.hasNext()) {
-                            Map.Entry<Long, List<StreamEvent>> entry = entryIterator.next();
-                            if (entry.getKey() + k <= largestTimestamp) {
-                                entryIterator.remove();
-                                List<StreamEvent> timeEventList = entry.getValue();
-                                lastSentTimestamp = entry.getKey();
-
-                                for (StreamEvent aTimeEventList : timeEventList) {
-                                    complexEventChunk.add(aTimeEventList);
-                                }
-                            } else {
+                    if (event.getType() != ComplexEvent.Type.TIMER) {
+                        streamEventChunk.remove();
+                        long timestamp = (Long) timestampExecutor.execute(event);
+                        state.timestampList.add(timestamp);
+                        double correlationField;
+                        switch (attributeExpressionExecutors[1].getReturnType()) {
+                            case INT:
+                                correlationField = (Integer) correlationFieldExecutor.execute(event);
                                 break;
+                            case LONG:
+                                correlationField = (Long) correlationFieldExecutor.execute(event);
+                                break;
+                            case FLOAT:
+                                correlationField = (Float) correlationFieldExecutor.execute(event);
+                                break;
+                            case DOUBLE:
+                                correlationField = (Double) correlationFieldExecutor.execute(event);
+                                break;
+                            default:
+                                //will not occur at all
+                                correlationField = 0.0;
+
+                        }
+                        state.dataItemList.add(correlationField);
+                        if (discardFlag) {
+                            if (timestamp < state.lastSentTimestamp) {
+                                continue;
                             }
                         }
-                    }
-                } else {
-                    if (timerDuration != -1) {
-                        if (secondaryTreeMap.size() > 0) {
-                            for (Map.Entry<Long, List<StreamEvent>> longListEntry :
-                                    secondaryTreeMap.entrySet()) {
-                                List<StreamEvent> timeEventList = longListEntry.getValue();
 
-                                for (StreamEvent aTimeEventList : timeEventList) {
-                                    complexEventChunk.add(aTimeEventList);
+                        if (timerFlag) {
+                            timerFlag = false;
+                            state.lastScheduledTimestamp = state.lastScheduledTimestamp + timerDuration;
+                            scheduler.notifyAt(state.lastScheduledTimestamp);
+                        }
+
+                        List<StreamEvent> eventList = state.primaryTreeMap.computeIfAbsent(timestamp,
+                                k1 -> new ArrayList<>());
+                        eventList.add(event);
+                        state.counter += 1;
+                        if (state.counter > batchSize) {
+                            if (l == 0) {
+                                alpha = calculateAlpha(windowCoverage.calculateWindowCoverageThreshold(criticalValue,
+                                        state.dataItemList), 1, state);
+                                l = Math.round(alpha * state.k);
+                                if (l > state.k) {
+                                    l = state.k;
+                                }
+                            } else {
+                                alpha = calculateAlpha(windowCoverage.calculateWindowCoverageThreshold(criticalValue,
+                                        state.dataItemList),
+                                        windowCoverage.calculateRuntimeWindowCoverage(timestamp, state.timestampList,
+                                                l, windowSize),
+                                        state);
+                                l = Math.round(alpha * state.k);
+                                if (l > state.k) {
+                                    l = state.k;
+                                }
+                            }
+                            state.counter = 0;
+                            state.dataItemList.clear();
+                        }
+                        if (timestamp > state.largestTimestamp) {
+                            state.largestTimestamp = timestamp;
+                            long minTimestamp = state.primaryTreeMap.firstKey();
+                            long timeDifference = state.largestTimestamp - minTimestamp;
+                            if (timeDifference > state.k) {
+                                if (timeDifference < maxK) {
+                                    state.k = Math.round(timeDifference * alpha);
+                                } else {
+                                    state.k = maxK;
                                 }
                             }
 
-                            secondaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
-
-                        }
-
-                        if (primaryTreeMap.size() > 0) {
-                            for (Map.Entry<Long, List<StreamEvent>> longListEntry :
-                                    primaryTreeMap.entrySet()) {
-                                List<StreamEvent> timeEventList = longListEntry.getValue();
-
-                                for (StreamEvent aTimeEventList : timeEventList) {
-                                    complexEventChunk.add(aTimeEventList);
+                            Iterator<Map.Entry<Long, List<StreamEvent>>> entryIterator =
+                                    state.primaryTreeMap.entrySet().iterator();
+                            while (entryIterator.hasNext()) {
+                                Map.Entry<Long, List<StreamEvent>> entry = entryIterator.next();
+                                List<StreamEvent> list = state.secondaryTreeMap.get(entry.getKey());
+                                if (list != null) {
+                                    list.addAll(entry.getValue());
+                                } else {
+                                    state.secondaryTreeMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
                                 }
                             }
+                            state.primaryTreeMap.clear();
+                            entryIterator = state.secondaryTreeMap.entrySet().iterator();
+                            while (entryIterator.hasNext()) {
+                                Map.Entry<Long, List<StreamEvent>> entry = entryIterator.next();
+                                if (entry.getKey() + state.k <= state.largestTimestamp) {
+                                    entryIterator.remove();
+                                    List<StreamEvent> timeEventList = entry.getValue();
+                                    state.lastSentTimestamp = entry.getKey();
 
-                            primaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
+                                    for (StreamEvent aTimeEventList : timeEventList) {
+                                        complexEventChunk.add(aTimeEventList);
+                                    }
+                                } else {
+                                    break;
+                                }
+                            }
                         }
+                    } else {
+                        if (timerDuration != -1) {
+                            if (state.secondaryTreeMap.size() > 0) {
+                                for (Map.Entry<Long, List<StreamEvent>> longListEntry :
+                                        state.secondaryTreeMap.entrySet()) {
+                                    List<StreamEvent> timeEventList = longListEntry.getValue();
 
-                        timerFlag = true;
+                                    for (StreamEvent aTimeEventList : timeEventList) {
+                                        complexEventChunk.add(aTimeEventList);
+                                    }
+                                }
+                                state.secondaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
+                            }
+
+                            if (state.primaryTreeMap.size() > 0) {
+                                for (Map.Entry<Long, List<StreamEvent>> longListEntry :
+                                        state.primaryTreeMap.entrySet()) {
+                                    List<StreamEvent> timeEventList = longListEntry.getValue();
+
+                                    for (StreamEvent aTimeEventList : timeEventList) {
+                                        complexEventChunk.add(aTimeEventList);
+                                    }
+                                }
+                                state.primaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
+                            }
+
+                            timerFlag = true;
+                        }
                     }
                 }
+            } catch (ArrayIndexOutOfBoundsException ec) {
+                //This happens due to user specifying an invalid field index.
+                throw new SiddhiAppCreationException("The very first parameter must be an " +
+                        "Integer with a valid " +
+                        " field index (0 to (fieldsLength-1)).");
+            } finally {
+                lock.unlock();
             }
-        } catch (ArrayIndexOutOfBoundsException ec) {
-            //This happens due to user specifying an invalid field index.
-            throw new SiddhiAppCreationException("The very first parameter must be an " +
-                    "Integer with a valid " +
-                    " field index (0 to (fieldsLength-1)).");
-        } finally {
-            lock.unlock();
+            nextProcessor.process(complexEventChunk);
         }
-
-        nextProcessor.process(complexEventChunk);
     }
 
     @Override
-    protected List<Attribute> init(AbstractDefinition abstractDefinition, ExpressionExecutor[] expressionExecutors,
-                                   ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
-        List<Attribute> attributes = new ArrayList<Attribute>();
-        this.siddhiAppContext = siddhiAppContext;
+    protected StateFactory<AlphaKSlackState> init(MetaStreamEvent metaStreamEvent,
+                                                  AbstractDefinition abstractDefinition,
+                                                  ExpressionExecutor[] expressionExecutors, ConfigReader configReader,
+                                                  StreamEventClonerHolder streamEventClonerHolder,
+                                                  boolean outputExpectsExpiredEvents, boolean findToBeExecuted,
+                                                  SiddhiQueryContext siddhiQueryContext) {
+        this.attributes = new ArrayList<>();
+        this.siddhiAppContext = siddhiQueryContext.getSiddhiAppContext();
         if (attributeExpressionLength > 8 || attributeExpressionLength < 2
                 || attributeExpressionLength == 7) {
             throw new SiddhiAppCreationException("Maximum six input parameters " +
@@ -574,10 +553,8 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
         criticalValue = Math.abs(actualDistribution.inverseCumulativeProbability
                 ((1 - confidenceLevel) / 2));
         windowCoverage = new WindowCoverage(errorThreshold);
-        primaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
-        secondaryTreeMap = new TreeMap<Long, List<StreamEvent>>();
 
-        return attributes;
+        return () -> new AlphaKSlackState();
     }
 
     @Override
@@ -588,19 +565,77 @@ public class AlphaKSlackExtension extends StreamProcessor implements SchedulingP
     @Override
     public void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
-        if (lastScheduledTimestamp < 0 && flag) {
-            lastScheduledTimestamp = siddhiAppContext.getTimestampGenerator().currentTime() +
-                    timerDuration;
-            scheduler.notifyAt(lastScheduledTimestamp);
-        }
     }
 
-    private double calculateAlpha(double windowCoverageThreshold, double runtimeWindowCoverage) {
+    private double calculateAlpha(double windowCoverageThreshold, double runtimeWindowCoverage,
+                                  AlphaKSlackState state) {
         double error = windowCoverageThreshold - runtimeWindowCoverage;
-        double deltaAlpha = (kp * error) + (kd * (error - previousError));
-        double alpha = Math.abs(previousAlpha + deltaAlpha);
-        previousError = error;
-        previousAlpha = alpha;
+        double deltaAlpha = (state.kp * error) + (state.kd * (error - state.previousError));
+        double alpha = Math.abs(state.previousAlpha + deltaAlpha);
+        state.previousError = error;
+        state.previousAlpha = alpha;
         return alpha;
+    }
+
+    class AlphaKSlackState extends State {
+        private Long k = 0L; //In the beginning the K is zero.
+        private Long largestTimestamp = 0L; //Used to track the greatest timestamp of tuples seen so far.
+        private Long lastSentTimestamp = -1L;
+        private Long lastScheduledTimestamp = -1L;
+        private double previousAlpha = 0;
+        private Integer counter = 0;
+        private double previousError = 0;
+        private double kp = 0.5; // Weight configuration parameters
+        private double kd = 0.8;
+        private TreeMap<Long, List<StreamEvent>> primaryTreeMap;
+        private TreeMap<Long, List<StreamEvent>> secondaryTreeMap;
+        private List<Double> dataItemList = new ArrayList<Double>();
+        private List<Long> timestampList = new ArrayList<Long>();
+
+        public AlphaKSlackState() {
+            primaryTreeMap = new TreeMap<>();
+            secondaryTreeMap = new TreeMap<>();
+        }
+
+        @Override
+        public boolean canDestroy() {
+            return false;
+        }
+
+        @Override
+        public Map<String, Object> snapshot() {
+            Map<String, Object> state = new HashMap<>();
+            state.put("k", k);
+            state.put("largestTimestamp", largestTimestamp);
+            state.put("lastSentTimestamp", lastSentTimestamp);
+            state.put("lastScheduledTimestamp", lastScheduledTimestamp);
+            state.put("previousAlpha", previousAlpha);
+            state.put("counter", counter);
+            state.put("previousError", previousError);
+            state.put("kp", kp);
+            state.put("kd", kd);
+            state.put("primaryTreeMap", primaryTreeMap);
+            state.put("secondaryTreeMap", secondaryTreeMap);
+            state.put("dataItemList", dataItemList);
+            state.put("timestampList", timestampList);
+            return state;
+        }
+
+        @Override
+        public void restore(Map<String, Object> state) {
+            k = (Long) state.get("k");
+            largestTimestamp = (Long) state.get("largestTimestamp");
+            lastSentTimestamp = (Long) state.get("lastSentTimestamp");
+            lastScheduledTimestamp = (Long) state.get("lastScheduledTimestamp");
+            previousAlpha = (Double) state.get("previousAlpha");
+            counter = (Integer) state.get("counter");
+            previousError = (Double) state.get("previousError");
+            kp = (Double) state.get("kp");
+            kd = (Double) state.get("kd");
+            primaryTreeMap = (TreeMap<Long, List<StreamEvent>>) state.get("primaryTreeMap");
+            secondaryTreeMap = (TreeMap<Long, List<StreamEvent>>) state.get("secondaryTreeMap");
+            dataItemList = (List<Double>) state.get("dataItemList");
+            timestampList = (List<Long>) state.get("timestampList");
+        }
     }
 }

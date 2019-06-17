@@ -17,8 +17,8 @@ limitations under the License.
 <suite name="Siddhi-Execution-Reorder-Test-Suite">
     <test name="Siddhi-Execution-Reorder-tests" preserve-order="true" parallel="false">
         <classes>
-            <class name="org.wso2.extension.siddhi.execution.reorder.AlphaKSlackExtensionTestCase"/>
-            <class name="org.wso2.extension.siddhi.execution.reorder.KSlackExtensionTestCase"/>
+            <class name="io.siddhi.extension.execution.reorder.AlphaKSlackExtensionTestCase"/>
+            <class name="io.siddhi.extension.execution.reorder.KSlackExtensionTestCase"/>
         </classes>
     </test>
 </suite>

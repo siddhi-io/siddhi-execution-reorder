@@ -16,17 +16,17 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.execution.reorder;
+package io.siddhi.extension.execution.reorder;
 
+import io.siddhi.core.SiddhiAppRuntime;
+import io.siddhi.core.SiddhiManager;
+import io.siddhi.core.exception.SiddhiAppCreationException;
+import io.siddhi.core.stream.input.InputHandler;
+import io.siddhi.core.stream.output.StreamCallback;
 import org.apache.log4j.Logger;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.siddhi.core.SiddhiAppRuntime;
-import org.wso2.siddhi.core.SiddhiManager;
-import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
-import org.wso2.siddhi.core.stream.input.InputHandler;
-import org.wso2.siddhi.core.stream.output.StreamCallback;
 
 /**
  * This is the test case for KSlackExtension.
@@ -59,8 +59,8 @@ public class KSlackExtensionTestCase {
         executionPlanRuntime.addCallback("outputStream", new StreamCallback() {
 
             @Override
-            public void receive(org.wso2.siddhi.core.event.Event[] events) {
-                for (org.wso2.siddhi.core.event.Event event : events) {
+            public void receive(io.siddhi.core.event.Event[] events) {
+                for (io.siddhi.core.event.Event event : events) {
                     count++;
 
                     if (count == 1) {
@@ -145,8 +145,8 @@ public class KSlackExtensionTestCase {
         executionPlanRuntime.addCallback("outputStream", new StreamCallback() {
 
             @Override
-            public void receive(org.wso2.siddhi.core.event.Event[] events) {
-                for (org.wso2.siddhi.core.event.Event event : events) {
+            public void receive(io.siddhi.core.event.Event[] events) {
+                for (io.siddhi.core.event.Event event : events) {
                     count++;
 
                     if (count == 1) {
