@@ -224,7 +224,6 @@ public class AlphaKSlackExtensionTestCase {
         inputHandler.send(new Object[]{34L, 51.0});
         inputHandler.send(new Object[]{32L, 27.0});
 
-
         SiddhiTestHelper.waitForEvents(waitTime, 33, count, timeout);
         executionPlanRuntime.shutdown();
     }
