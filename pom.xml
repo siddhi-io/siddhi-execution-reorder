@@ -53,9 +53,9 @@
     </properties>
 
     <scm>
-        <connection>scm:git:https://github.com/wso2-extensions/siddhi-execution-reorder.git</connection>
-        <url>https://github.com/wso2-extensions/siddhi-execution-reorder.git</url>
-        <developerConnection>scm:git:https://github.com/wso2-extensions/siddhi-execution-reorder.git
+        <connection>scm:git:https://github.com/siddhi-io/siddhi-execution-reorder.git</connection>
+        <url>https://github.com/siddhi-io/siddhi-execution-reorder.git</url>
+        <developerConnection>scm:git:https://github.com/siddhi-io/siddhi-execution-reorder.git
         </developerConnection>
         <tag>HEAD</tag>
     </scm>
