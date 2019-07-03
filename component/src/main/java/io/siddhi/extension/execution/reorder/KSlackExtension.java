@@ -21,6 +21,7 @@ package io.siddhi.extension.execution.reorder;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.config.SiddhiQueryContext;
@@ -66,7 +67,8 @@ import java.util.concurrent.locks.ReentrantLock;
         parameters = {
                 @Parameter(name = "timestamp",
                         description = "This is the attribute used for ordering the events.",
-                        type = {DataType.LONG}),
+                        type = {DataType.LONG},
+                        dynamic = true),
                 @Parameter(name = "timer.timeout",
                         description = "This corresponds to a fixed time-out value in milliseconds, which is set at " +
                                 "the beginning of the process. " +
@@ -89,6 +91,12 @@ import java.util.concurrent.locks.ReentrantLock;
                         defaultValue = "false",
                         type = {DataType.BOOL},
                         optional = true)
+        },
+        parameterOverloads = {
+                @ParameterOverload(parameterNames = {"timestamp"}),
+                @ParameterOverload(parameterNames = {"timestamp", "timer.timeout"}),
+                @ParameterOverload(parameterNames = {"timestamp", "timer.timeout", "max.k"}),
+                @ParameterOverload(parameterNames = {"timestamp", "timer.timeout", "max.k", "discard.flag"})
         },
         examples = @Example(
                 syntax = "define stream InputStream (eventtt long, price long, volume long);\n" +
