@@ -21,6 +21,7 @@ package io.siddhi.extension.execution.reorder;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.ParameterOverload;
 import io.siddhi.annotation.ReturnAttribute;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiAppContext;
@@ -74,14 +75,16 @@ import java.util.concurrent.locks.ReentrantLock;
         parameters = {
                 @Parameter(name = "timestamp",
                         description = "The attribute used for ordering the events.",
-                        type = {DataType.LONG}),
+                        type = {DataType.LONG},
+                        dynamic = true),
                 @Parameter(name = "correlation.field",
                         description = "This corresponds to the data field of which the accuracy directly gets " +
                                 "affected, " +
                                 "by the adaptive operation of the Alpha K-Slack extension. This field is used to" +
                                 " calculate the runtime window coverage threshold which is an upper " +
                                 "limit set for the unsuccessfully handled late arrivals.",
-                        type = {DataType.INT, DataType.FLOAT, DataType.LONG, DataType.DOUBLE}),
+                        type = {DataType.INT, DataType.FLOAT, DataType.LONG, DataType.DOUBLE},
+                        dynamic = true),
                 @Parameter(name = "batch.size",
                         description = "The parameter 'batch.size' denotes the number of events that should be " +
                                 "considered in the calculation of an alpha value. It should be a value " +
@@ -124,6 +127,19 @@ import java.util.concurrent.locks.ReentrantLock;
                         defaultValue = "0.95 (95%)",
                         type = {DataType.DOUBLE},
                         optional = true)
+        },
+        parameterOverloads = {
+                @ParameterOverload(parameterNames = {"timestamp", "correlation.field"}),
+                @ParameterOverload(parameterNames = {"timestamp", "correlation.field", "batch.size"}),
+                @ParameterOverload(parameterNames = {"timestamp", "correlation.field", "batch.size", "timer.timeout"}),
+                @ParameterOverload(parameterNames = {"timestamp", "correlation.field", "batch.size", "timer.timeout",
+                        "max.k"}),
+                @ParameterOverload(parameterNames = {"timestamp", "correlation.field", "batch.size", "timer.timeout",
+                        "max.k", "discard.flag"}),
+                @ParameterOverload(parameterNames = {"timestamp", "correlation.field", "batch.size", "timer.timeout",
+                        "max.k", "discard.flag", "error.threshold"}),
+                @ParameterOverload(parameterNames = {"timestamp", "correlation.field", "batch.size", "timer.timeout",
+                        "max.k", "discard.flag", "error.threshold", "confidence.level"})
         },
         returnAttributes = {
                 @ReturnAttribute(
