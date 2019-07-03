@@ -2,7 +2,7 @@
 
 ## Reorder
 
-### akslack *<a target="_blank" href="http://siddhi.io/documentation/siddhi-5.x/query-guide-5.x/#stream-processor">(Stream Processor)</a>*
+### akslack *<a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#stream-processor">(Stream Processor)</a>*
 
 <p style="word-wrap: break-word">This stream processor extension performs reordering of an event stream which is out of order.<br>&nbsp;It implements the AQ-K-Slack based out-of-order handling algorithm which is originally described in <br>'http://dl.acm.org/citation.cfm?doid=2675743.2771828'.</p>
 
@@ -146,7 +146,7 @@ insert into OutputStream;
 ```
 <p style="word-wrap: break-word">This query performs reordering based on the 'eventtt' attribute values. In this example, 20 represents the batch size.</p>
 
-### kslack *<a target="_blank" href="http://siddhi.io/documentation/siddhi-5.x/query-guide-5.x/#stream-processor">(Stream Processor)</a>*
+### kslack *<a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#stream-processor">(Stream Processor)</a>*
 
 <p style="word-wrap: break-word">This stream processor extension performs reordering of an out-of-order event stream.<br>&nbsp;It implements the K-Slack based out-of-order handling algorithm which is originally described in <br>'https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf'.)</p>
 
