@@ -19,7 +19,7 @@ For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and i
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-execution-reorder/api/5.0.3">5.0.3</a>.
+Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-execution-reorder/api/5.0.1">5.0.1</a>.
 
 ## Features
 
