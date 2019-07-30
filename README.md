@@ -19,12 +19,12 @@ For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and i
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-execution-reorder/api/5.0.2">5.0.2</a>.
+Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-execution-reorder/api/5.0.3">5.0.3</a>.
 
 ## Features
 
-* <a target="_blank" href="https://siddhi-io.github.io/siddhi-execution-reorder/api/5.0.2/#akslack-stream-processor">akslack</a> *(<a target="_blank" href="http://siddhi.io/en/v5.0/docs/query-guide/#stream-processor">Stream Processor</a>)*<br> <div style="padding-left: 1em;"><p>Stream processor performs reordering of out-of-order events optimized for a givenparameter using [AQ-K-Slack algorithm](http://dl.acm.org/citation.cfm?doid=2675743.2771828). This is best for reordering events on attributes those are used for aggregations.data .</p></div>
-* <a target="_blank" href="https://siddhi-io.github.io/siddhi-execution-reorder/api/5.0.2/#kslack-stream-processor">kslack</a> *(<a target="_blank" href="http://siddhi.io/en/v5.0/docs/query-guide/#stream-processor">Stream Processor</a>)*<br> <div style="padding-left: 1em;"><p>Stream processor performs reordering of out-of-order events using [K-Slack algorithm](https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf).</p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-execution-reorder/api/5.0.3/#akslack-stream-processor">akslack</a> *(<a target="_blank" href="http://siddhi.io/en/v5.0/docs/query-guide/#stream-processor">Stream Processor</a>)*<br> <div style="padding-left: 1em;"><p>Stream processor performs reordering of out-of-order events optimized for a givenparameter using [AQ-K-Slack algorithm](http://dl.acm.org/citation.cfm?doid=2675743.2771828). This is best for reordering events on attributes those are used for aggregations.data .</p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-execution-reorder/api/5.0.3/#kslack-stream-processor">kslack</a> *(<a target="_blank" href="http://siddhi.io/en/v5.0/docs/query-guide/#stream-processor">Stream Processor</a>)*<br> <div style="padding-left: 1em;"><p>Stream processor performs reordering of out-of-order events using [K-Slack algorithm](https://www2.informatik.uni-erlangen.de/publication/download/IPDPS2013.pdf).</p></div>
 
 ## Dependencies 
 
