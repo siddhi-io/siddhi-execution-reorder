@@ -98,7 +98,7 @@ import java.util.concurrent.locks.ReentrantLock;
         examples = @Example(
                 syntax = "define stream StockStream (eventTime long, symbol string, volume long);\n\n" +
                         "@info(name = 'query1')\n" +
-                        "from StockStream#reorder:kslack(eventTime, 5000)\n" +
+                        "from StockStream#reorder:kslack(eventTime, 5000L)\n" +
                         "select eventTime, symbol, volume\n" +
                         "insert into OutputStream;",
                 description = "The query reorders events based on the 'eventTime' attribute value, and " +
